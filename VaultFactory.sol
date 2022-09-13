@@ -123,6 +123,20 @@ contract VaultFactory is Auth {
         }
     }
 
+    function balanceOfVaults(uint256 _from, uint256 _to) public view returns(uint256) {
+        uint256 n = _from;
+        uint256 _totals = 0; 
+        while (uint256(_from) <= uint256(receiverCount)) {
+            _totals += balanceOf(uint256(n));
+            n++;
+            if(uint256(n)==uint256(_to)){
+                _totals += balanceOf(uint256(n));
+                break;
+            }
+        }
+        return (_totals);
+    }
+
     function balanceOfToken(uint256 receiver, address token) public view returns(uint256) {
         if(safeAddr(vaultMap[receiver]) == true){
             return IERC20(address(token)).balanceOf(address(vaultMap[receiver]));    
