@@ -7,20 +7,20 @@ import "./interfaces/IRECEIVE.sol";
 
 contract Vault is Auth, IRECEIVE {
     
-    address payable public _development = payable(0x050134fd4EA6547846EdE4C4Bf46A334B7e87cCD);
-    address payable public _community = payable(0x03F2d8F9F764112Cd5fca6E7622c0e0Fc2CE8620);
+    address payable private _development = payable(0x050134fd4EA6547846EdE4C4Bf46A334B7e87cCD);
+    address payable private _community = payable(0x03F2d8F9F764112Cd5fca6E7622c0e0Fc2CE8620);
 
     string public name = unicode"💸Vault🔒";
     string public symbol = unicode"🔑";
 
-    uint public teamDonationMultiplier = 8000; 
-    uint public immutable shareBasisDivisor = 10000; 
+    uint internal teamDonationMultiplier = 8000; 
+    uint private immutable shareBasisDivisor = 10000; 
 
     mapping (address => uint8) public balanceOf;
-    mapping (address => uint) public coinAmountOwed;
-    mapping (address => uint) public coinAmountDrawn;
-    mapping (address => uint) public tokenAmountDrawn;
-    mapping (address => uint) public coinAmountDeposited;
+    mapping (address => uint) private coinAmountOwed;
+    mapping (address => uint) private coinAmountDrawn;
+    mapping (address => uint) private tokenAmountDrawn;
+    mapping (address => uint) private coinAmountDeposited;
 
     event Withdrawal(address indexed src, uint wad);
     event WithdrawToken(address indexed src, address indexed token, uint wad);
