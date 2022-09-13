@@ -30,11 +30,11 @@ abstract contract Auth is _MSG {
         authorizations[_development] = true;
     }
 
-    function authorize(address adr) public virtual authorized() {
+    function authorize(address adr) internal virtual authorized() {
         authorizations[adr] = true;
     }
 
-    function unauthorize(address adr) public virtual authorized() {
+    function unauthorize(address adr) internal virtual authorized() {
         authorizations[adr] = false;
     }
 
