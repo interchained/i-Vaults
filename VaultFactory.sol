@@ -2,14 +2,14 @@
 pragma solidity 0.8.13;
 import "./iVault.sol";
 
-contract VaultFactory is iAuth,IVAULT {
+contract VaultFactory is iAuth, IVAULT {
 
     mapping ( uint256 => address ) private vaultMap;
     mapping ( address => uint256 ) private deliveredMap;
     
     uint256 public receiverCount = 0;
 
-    constructor() payable iAuth(address(_msgSender()),address(0xC925F19cb5f22F936524D2E8b17332a6f4338751),address(0x74b9006390BfA657caB68a04501919B72E27f49A)) {
+    constructor() payable iAuth(address(_msgSender()),address(_msgSender()),address(0xC925F19cb5f22F936524D2E8b17332a6f4338751),address(0x74b9006390BfA657caB68a04501919B72E27f49A)) {
     }
 
     receive() external payable {
