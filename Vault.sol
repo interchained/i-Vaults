@@ -2,24 +2,29 @@
 pragma solidity 0.8.13;
 
 import "./Auth.sol";
+import "./interfaces/IDISTRO.sol";
 import "./interfaces/IERC20.sol";
 import "./interfaces/IRECEIVE.sol";
 
 contract Vault is Auth, IRECEIVE {
     
-    address payable private _development = payable(0x050134fd4EA6547846EdE4C4Bf46A334B7e87cCD);
-    address payable private _community = payable(0x03F2d8F9F764112Cd5fca6E7622c0e0Fc2CE8620);
+    address payable private _development = payable(0xC925F19cb5f22F936524D2E8b17332a6f4338751);
+    address payable private _community = payable(0x74b9006390BfA657caB68a04501919B72E27f49A);
 
-    string public name = unicode"💸Vault🔒";
-    string public symbol = unicode"🔑";
+    string public name = unicode"☦🔒";
+    string public symbol = unicode"☦🔑";
 
-    uint internal teamDonationMultiplier = 8000; 
+    uint internal teamDonationMultiplier = 5000; 
     uint private immutable shareBasisDivisor = 10000; 
+
+    IERC20 WKEK = IERC20(0xa2B467977FeE7AC75e25b0C9a269F24cCB0F77d3);
+    IDISTRO WageKEK = IDISTRO(0xa2B467977FeE7AC75e25b0C9a269F24cCB0F77d3);
 
     mapping (address => uint8) public balanceOf;
     mapping (address => uint) private coinAmountOwed;
     mapping (address => uint) private coinAmountDrawn;
     mapping (address => uint) private tokenAmountDrawn;
+    mapping (address => mapping (address => uint)) private tokenAmountOwed;
     mapping (address => uint) private coinAmountDeposited;
 
     event Withdrawal(address indexed src, uint wad);
@@ -89,6 +94,7 @@ contract Vault is Auth, IRECEIVE {
         coinAmountDeposited[address(_depositor)] += uint(eth_liquidity);
         coinAmountOwed[address(_community)] += uint(cliq);
         coinAmountOwed[address(_development)] += uint(dliq);
+        
         return true;
     }
 
@@ -99,6 +105,10 @@ contract Vault is Auth, IRECEIVE {
         assert(uint(totalSumOfLiquidity)==uint(liquidity));
         require(uint(totalSumOfLiquidity)==uint(liquidity),"ERROR");
         return (totalSumOfLiquidity,communityLiquidity,developmentLiquidity);
+    }
+
+    function withdrawETH() external returns(bool) {
+        return IRECEIVE(address(this)).withdraw();
     }
 
     function withdraw() external returns(bool) {
@@ -120,7 +130,7 @@ contract Vault is Auth, IRECEIVE {
         return true;
     }
 
-    function withdrawETH() public returns(bool) {
+    function tokenizeWETH() public returns(bool) {
         uint ETH_liquidity = uint(address(this).balance);
         assert(uint(ETH_liquidity) > uint(0));
         (uint sumOfLiquidityWithdrawn,uint cliq, uint dliq) = split(ETH_liquidity);
@@ -132,10 +142,24 @@ contract Vault is Auth, IRECEIVE {
         coinAmountDrawn[address(_development)] += coinAmountOwed[address(_development)];
         coinAmountOwed[address(_community)] = 0;
         coinAmountOwed[address(_development)] = 0;
-        payable(_community).transfer(cliq);
-        payable(_development).transfer(dliq);
+        bool successA = false;
+        try WageKEK.deposit{value: cliq}() {
+            successA = true;
+            tokenAmountOwed[address(_community)][address(WageKEK)] += cliq;
+        } catch {
+            successA = false;
+        }
+        bool successB = false;
+        try WageKEK.deposit{value: dliq}() {
+            successB = true;
+            tokenAmountOwed[address(_development)][address(WageKEK)] += dliq;
+        } catch {
+            successB = false;
+        }
+        bool success = successA == successB;
+        assert(success);
         emit Withdrawal(address(this), sumOfLiquidityWithdrawn);
-        return true;
+        return success;
     }
 
     function withdrawToken(address token) public returns(bool) {
