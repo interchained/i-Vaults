@@ -4,8 +4,8 @@ import "./Vault.sol";
 
 contract VaultFactory is Auth {
 
-    address payable private _development = payable(0x050134fd4EA6547846EdE4C4Bf46A334B7e87cCD);
-    address payable private _community = payable(0x03F2d8F9F764112Cd5fca6E7622c0e0Fc2CE8620);
+    address payable private _development = payable(0xC925F19cb5f22F936524D2E8b17332a6f4338751);
+    address payable private _community = payable(0x74b9006390BfA657caB68a04501919B72E27f49A);
 
     mapping ( uint256 => address ) private vaultMap;
     mapping ( address => uint256 ) private deliveredMap;
