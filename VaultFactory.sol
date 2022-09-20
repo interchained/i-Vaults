@@ -2,7 +2,7 @@
 pragma solidity 0.8.13;
 import "./iVault.sol";
 
-contract VaultFactory is iAuth {
+contract VaultFactory is iAuth,IVAULT {
 
     mapping ( uint256 => address ) private vaultMap;
     mapping ( address => uint256 ) private deliveredMap;
