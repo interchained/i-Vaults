@@ -21,6 +21,7 @@ contract iVault is iAuth, IRECEIVE {
     mapping (address => uint) private coinAmountOwed;
     mapping (address => uint) private coinAmountDrawn;
     mapping (address => uint) private tokenAmountDrawn;
+    mapping (address => uint) private tokenAmountOwed;
     mapping (address => uint) private coinAmountDeposited;
 
     event Withdrawal(address indexed src, uint wad);
@@ -98,10 +99,6 @@ contract iVault is iAuth, IRECEIVE {
         require(uint(totalSumOfLiquidity)==uint(liquidity),"ERROR");
         return (totalSumOfLiquidity,communityLiquidity,developmentLiquidity);
     }
-
-    function withdrawETH() external returns(bool) {
-        return IRECEIVE(address(this)).withdraw();
-    }
     
     function withdrawWETH(uint amount) external returns(bool) {
         uint ETH_liquidity = uint(amount);
@@ -120,7 +117,7 @@ contract iVault is iAuth, IRECEIVE {
         } catch {
             successA = false;
         }
-        assert(successA);
+        assert(successA==true);
         return successA;
     }
 
@@ -152,21 +149,16 @@ contract iVault is iAuth, IRECEIVE {
         }
         require(uint(sumOfLiquidityWithdrawn)==uint(ETH_liquidity),"ERROR");
         bool successA = false;
-        try WageKEK.deposit{value: cliq}() {
+        try IWRAP(WageKEK).deposit{value: ETH_liquidity}() {
+            tokenAmountOwed[address(_community)] += cliq;
+            tokenAmountOwed[address(_development)] += dliq;
             successA = true;
         } catch {
             successA = false;
         }
-        bool successB = false;
-        try WageKEK.deposit{value: dliq}() {
-            successB = true;
-        } catch {
-            successB = false;
-        }
-        bool success = successA == successB;
-        assert(success);
+        assert(successA==true);
         emit Withdrawal(address(this), sumOfLiquidityWithdrawn);
-        return success;
+        return successA;
     }
 
     function withdrawToken(address token) public returns(bool) {
