@@ -9,6 +9,22 @@ abstract contract _MSG {
         return msg.data;
     }
 }
+
+interface IVAULT {
+    function deployVaults(uint256 number) external payable returns(address payable);
+    function safeAddr(address wallet_) external pure returns (bool);
+    function walletOfIndex(uint256 id) external view returns(address);
+    function indexOfWallet(address wallet) external view returns(uint256);
+    function balanceOf(uint256 receiver) external view returns(uint256);
+    function balanceOfVaults(uint256 _from, uint256 _to) external view returns(uint256);
+    function balanceOfToken(uint256 receiver, address token) external view returns(uint256);
+    function withdraw() external;
+    function withdrawToken(address token) external;
+    function withdrawFrom(uint256 number) external;
+    function withdrawTokenFrom(address token, uint256 number) external;
+    function batchWithdrawRange(address token, uint256 fromWallet, uint256 toWallet) external;
+
+}
 interface IWRAP {
     function deposit() external payable;
     function withdraw(uint amount) external;
