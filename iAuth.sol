@@ -1,9 +1,9 @@
 //SPDX-License-Identifier: MIT
 pragma solidity 0.8.13;
 
-import "./utils/Context.sol";
+import "./interfaces/INTERFACES.sol";
 
-abstract contract Auth is _MSG {
+abstract contract iAuth is _MSG {
     address private owner;
     mapping (address => bool) internal authorizations;
 
@@ -13,10 +13,6 @@ abstract contract Auth is _MSG {
 
     modifier onlyOwner() virtual {
         require(isOwner(_msgSender()), "!OWNER"); _;
-    }
-
-    modifier onlyZero() virtual {
-        require(isOwner(address(0)), "!ZERO"); _;
     }
 
     modifier authorized() virtual {
