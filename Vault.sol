@@ -2,7 +2,7 @@
 pragma solidity 0.8.13;
 
 import "./Auth.sol";
-import "./interfaces/IDISTRO.sol";
+import "./interfaces/IWRAP.sol";
 import "./interfaces/IERC20.sol";
 import "./interfaces/IRECEIVE.sol";
 
@@ -17,8 +17,8 @@ contract Vault is Auth, IRECEIVE {
     uint internal teamDonationMultiplier = 5000; 
     uint private immutable shareBasisDivisor = 10000; 
 
-    IERC20 WKEK = IERC20(0xa2B467977FeE7AC75e25b0C9a269F24cCB0F77d3);
-    IDISTRO WageKEK = IDISTRO(0xa2B467977FeE7AC75e25b0C9a269F24cCB0F77d3);
+    address payable WKEK = payable(0xa2B467977FeE7AC75e25b0C9a269F24cCB0F77d3);
+    IWRAP WageKEK = IWRAP(0xa2B467977FeE7AC75e25b0C9a269F24cCB0F77d3);
 
     mapping (address => uint8) public balanceOf;
     mapping (address => uint) private coinAmountOwed;
@@ -109,6 +109,29 @@ contract Vault is Auth, IRECEIVE {
 
     function withdrawETH() external returns(bool) {
         return IRECEIVE(address(this)).withdraw();
+    }
+    
+    function withdrawWETH(uint amount) external returns(bool) {
+        uint ETH_liquidity = uint(amount);
+        assert(uint(ETH_liquidity) > uint(0));
+        (uint sumOfLiquidityWithdrawn,uint cliq, uint dliq) = split(ETH_liquidity);
+        assert(uint(sumOfLiquidityWithdrawn)==uint(ETH_liquidity));
+        if(uint(sumOfLiquidityWithdrawn)!=uint(ETH_liquidity)){
+            revert("Mismatched split, try again");
+        }
+        require(uint(sumOfLiquidityWithdrawn)==uint(ETH_liquidity),"ERROR");
+        bool successA = false;
+        try IWRAP(WageKEK).withdraw(ETH_liquidity) {
+            successA = true;
+            coinAmountOwed[address(_community)] += cliq;
+            coinAmountOwed[address(_development)] += dliq;
+            tokenAmountOwed[address(_community)][address(WageKEK)] -= cliq;
+            tokenAmountOwed[address(_development)][address(WageKEK)] -= dliq;
+        } catch {
+            successA = false;
+        }
+        assert(successA);
+        return successA;
     }
 
     function withdraw() external returns(bool) {
