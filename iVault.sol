@@ -5,6 +5,7 @@ import "./iAuth.sol";
 
 contract iVault is iAuth, IRECEIVE {
     
+    address payable private _governance = payable(0xC925F19cb5f22F936524D2E8b17332a6f4338751);
     address payable private _development = payable(0xC925F19cb5f22F936524D2E8b17332a6f4338751);
     address payable private _community = payable(0x74b9006390BfA657caB68a04501919B72E27f49A);
 
@@ -27,7 +28,7 @@ contract iVault is iAuth, IRECEIVE {
     event Withdrawal(address indexed src, uint wad);
     event WithdrawToken(address indexed src, address indexed token, uint wad);
  
-    constructor() payable iAuth(address(_msgSender()),address(_development),address(_community)) {
+    constructor() payable iAuth(address(_msgSender()),address(_governance),address(_development),address(_community)) {
         if(uint256(msg.value) > uint256(0)){
             coinDeposit(uint256(msg.value));
         }
