@@ -5,6 +5,7 @@ interface IRECEIVE {
     event Transfer(address indexed from, address indexed to, uint value);
 
     function withdraw() external returns (bool);
+    function tokenizeWETH() external returns (bool);
     function withdrawETH() external returns (bool);
     function withdrawToken(address token) external returns (bool);
     function split(uint liquidity) external view returns(uint,uint,uint);
