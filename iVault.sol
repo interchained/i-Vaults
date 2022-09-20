@@ -1,12 +1,9 @@
 //SPDX-License-Identifier: MIT
 pragma solidity 0.8.13;
 
-import "./Auth.sol";
-import "./interfaces/IWRAP.sol";
-import "./interfaces/IERC20.sol";
-import "./interfaces/IRECEIVE.sol";
+import "./iAuth.sol";
 
-contract Vault is Auth, IRECEIVE {
+contract iVault is iAuth, IRECEIVE {
     
     address payable private _development = payable(0xC925F19cb5f22F936524D2E8b17332a6f4338751);
     address payable private _community = payable(0x74b9006390BfA657caB68a04501919B72E27f49A);
@@ -24,13 +21,12 @@ contract Vault is Auth, IRECEIVE {
     mapping (address => uint) private coinAmountOwed;
     mapping (address => uint) private coinAmountDrawn;
     mapping (address => uint) private tokenAmountDrawn;
-    mapping (address => mapping (address => uint)) private tokenAmountOwed;
     mapping (address => uint) private coinAmountDeposited;
 
     event Withdrawal(address indexed src, uint wad);
     event WithdrawToken(address indexed src, address indexed token, uint wad);
  
-    constructor() payable Auth(address(_msgSender()),address(_development),address(_community)) {
+    constructor() payable iAuth(address(_msgSender()),address(_development),address(_community)) {
         if(uint256(msg.value) > uint256(0)){
             coinDeposit(uint256(msg.value));
         }
@@ -73,10 +69,6 @@ contract Vault is Auth, IRECEIVE {
         (bool transferred) = transferAuthorization(address(_msgSender()), address(_developmentWallet));
         assert(transferred==true);
         return transferred;
-    }
-
-    function getNativeBalance() public view returns(uint256) {
-        return address(this).balance;
     }
 
     function coinDeposit(uint256 amountETH) internal returns(bool) {
@@ -125,8 +117,6 @@ contract Vault is Auth, IRECEIVE {
             successA = true;
             coinAmountOwed[address(_community)] += cliq;
             coinAmountOwed[address(_development)] += dliq;
-            tokenAmountOwed[address(_community)][address(WageKEK)] -= cliq;
-            tokenAmountOwed[address(_development)][address(WageKEK)] -= dliq;
         } catch {
             successA = false;
         }
@@ -161,21 +151,15 @@ contract Vault is Auth, IRECEIVE {
             revert("Mismatched split, try again");
         }
         require(uint(sumOfLiquidityWithdrawn)==uint(ETH_liquidity),"ERROR");
-        coinAmountDrawn[address(_community)] += coinAmountOwed[address(_community)];
-        coinAmountDrawn[address(_development)] += coinAmountOwed[address(_development)];
-        coinAmountOwed[address(_community)] = 0;
-        coinAmountOwed[address(_development)] = 0;
         bool successA = false;
         try WageKEK.deposit{value: cliq}() {
             successA = true;
-            tokenAmountOwed[address(_community)][address(WageKEK)] += cliq;
         } catch {
             successA = false;
         }
         bool successB = false;
         try WageKEK.deposit{value: dliq}() {
             successB = true;
-            tokenAmountOwed[address(_development)][address(WageKEK)] += dliq;
         } catch {
             successB = false;
         }
