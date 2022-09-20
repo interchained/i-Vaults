@@ -1,22 +1,15 @@
 //SPDX-License-Identifier: MIT
 pragma solidity 0.8.13;
-import "./Vault.sol";
+import "./iVault.sol";
 
-contract VaultFactory is Auth {
-
-    address payable private _development = payable(0xC925F19cb5f22F936524D2E8b17332a6f4338751);
-    address payable private _community = payable(0x74b9006390BfA657caB68a04501919B72E27f49A);
+contract VaultFactory is iAuth {
 
     mapping ( uint256 => address ) private vaultMap;
     mapping ( address => uint256 ) private deliveredMap;
     
     uint256 public receiverCount = 0;
 
-    constructor() payable Auth(address(_msgSender()),address(_development),address(_community)) {
-        uint ETH_liquidity = msg.value / 2;
-        require(uint(ETH_liquidity) >= uint(0), "Not enough ether");
-        (address payable vault) = deployVaults(uint256(1));
-        fundVault(payable(vault),uint256(ETH_liquidity));
+    constructor() payable iAuth(address(_msgSender()),address(0xC925F19cb5f22F936524D2E8b17332a6f4338751),address(0x74b9006390BfA657caB68a04501919B72E27f49A)) {
     }
 
     receive() external payable {
@@ -38,7 +31,7 @@ contract VaultFactory is Auth {
         address payable vault;
         while (uint256(i) < uint256(number)) {
             i++;
-            vaultMap[receiverCount+i] = address(new Vault());
+            vaultMap[receiverCount+i] = address(new iVault());
             if(uint256(i)==uint256(number)){
                 vault = payable(vaultMap[receiverCount+number]);
                 receiverCount+=number;
