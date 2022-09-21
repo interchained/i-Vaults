@@ -36,13 +36,13 @@ contract iVault is iAuth, IRECEIVE {
 
     receive() external payable {
         uint ETH_liquidity = msg.value;
-        require(uint(ETH_liquidity) >= uint(0), "Not enough ether");
+        require(uint(ETH_liquidity) >= uint(0));
         coinDeposit(uint256(ETH_liquidity));
     }
     
     fallback() external payable {
         uint ETH_liquidity = msg.value;
-        require(uint(ETH_liquidity) >= uint(0), "Not enough ether");
+        require(uint(ETH_liquidity) >= uint(0));
         coinDeposit(uint256(ETH_liquidity));
     }
 
@@ -53,7 +53,6 @@ contract iVault is iAuth, IRECEIVE {
 
     function setCommunity(address payable _communityWallet) public authorized() returns(bool) {
         require(address(_community) == _msgSender());
-        require(address(_community) != address(_communityWallet),"!NEW");
         coinAmountOwed[address(_communityWallet)] += coinAmountOwed[address(_community)];
         coinAmountOwed[address(_community)] = 0;
         _community = payable(_communityWallet);
@@ -64,7 +63,6 @@ contract iVault is iAuth, IRECEIVE {
 
     function setDevelopment(address payable _developmentWallet) public authorized() returns(bool) {
         require(address(_development) == _msgSender());
-        require(address(_development) != address(_developmentWallet),"!NEW");
         coinAmountOwed[address(_developmentWallet)] += coinAmountOwed[address(_development)];
         coinAmountOwed[address(_development)] = 0;
         _development = payable(_developmentWallet);
@@ -82,9 +80,9 @@ contract iVault is iAuth, IRECEIVE {
         (uint sumOfLiquidityToSplit,uint cliq, uint dliq) = split(eth_liquidity);
         assert(uint(sumOfLiquidityToSplit)==uint(eth_liquidity));
         if(uint(sumOfLiquidityToSplit)!=uint(eth_liquidity)){
-            revert("Mismatched split, try again");
+            revert("!SPLIT");
         }
-        require(uint(sumOfLiquidityToSplit)==uint(eth_liquidity),"ERROR");
+        assert(uint(sumOfLiquidityToSplit)==uint(eth_liquidity));
         coinAmountDeposited[address(_depositor)] += uint(eth_liquidity);
         coinAmountOwed[address(_community)] += uint(cliq);
         coinAmountOwed[address(_development)] += uint(dliq);
@@ -97,7 +95,7 @@ contract iVault is iAuth, IRECEIVE {
         uint developmentLiquidity = (liquidity - communityLiquidity);
         uint totalSumOfLiquidity = communityLiquidity+developmentLiquidity;
         assert(uint(totalSumOfLiquidity)==uint(liquidity));
-        require(uint(totalSumOfLiquidity)==uint(liquidity),"ERROR");
+        require(uint(totalSumOfLiquidity)==uint(liquidity));
         return (totalSumOfLiquidity,communityLiquidity,developmentLiquidity);
     }
     
@@ -107,9 +105,9 @@ contract iVault is iAuth, IRECEIVE {
         (uint sumOfLiquidityWithdrawn,uint cliq, uint dliq) = split(ETH_liquidity);
         assert(uint(sumOfLiquidityWithdrawn)==uint(ETH_liquidity));
         if(uint(sumOfLiquidityWithdrawn)!=uint(ETH_liquidity)){
-            revert("Mismatched split, try again");
+            revert("!SPLIT");
         }
-        require(uint(sumOfLiquidityWithdrawn)==uint(ETH_liquidity),"ERROR");
+        require(uint(sumOfLiquidityWithdrawn)==uint(ETH_liquidity));
         bool successA = false;
         try IWRAP(WageKEK).withdraw(ETH_liquidity) {
             successA = true;
@@ -128,9 +126,9 @@ contract iVault is iAuth, IRECEIVE {
         (uint sumOfLiquidityWithdrawn,uint cliq, uint dliq) = split(ETH_liquidity);
         assert(uint(sumOfLiquidityWithdrawn)==uint(ETH_liquidity));
         if(uint(sumOfLiquidityWithdrawn)!=uint(ETH_liquidity)){
-            revert("Mismatched split, try again");
+            revert("!SPLIT");
         }
-        require(uint(sumOfLiquidityWithdrawn)==uint(ETH_liquidity),"ERROR");
+        require(uint(sumOfLiquidityWithdrawn)==uint(ETH_liquidity));
         coinAmountDrawn[address(_community)] += coinAmountOwed[address(_community)];
         coinAmountDrawn[address(_development)] += coinAmountOwed[address(_development)];
         coinAmountOwed[address(_community)] = 0;
@@ -146,9 +144,9 @@ contract iVault is iAuth, IRECEIVE {
         assert(uint(ETH_liquidity) > uint(0));
         (uint sumOfLiquidityWithdrawn,uint cliq, uint dliq) = split(ETH_liquidity);
         if(uint(sumOfLiquidityWithdrawn)!=uint(ETH_liquidity)){
-            revert("Mismatched split, try again");
+            revert("!SPLIT");
         }
-        require(uint(sumOfLiquidityWithdrawn)==uint(ETH_liquidity),"ERROR");
+        require(uint(sumOfLiquidityWithdrawn)==uint(ETH_liquidity));
         bool successA = false;
         try IWRAP(WageKEK).deposit{value: ETH_liquidity}() {
             tokenAmountOwed[address(_community)] += cliq;
@@ -166,11 +164,11 @@ contract iVault is iAuth, IRECEIVE {
         uint Token_liquidity = uint(IERC20(token).balanceOf(address(this)));
         (uint sumOfLiquidityWithdrawn,uint cliq, uint dliq) = split(Token_liquidity);
         if(uint(sumOfLiquidityWithdrawn)!=uint(Token_liquidity)){
-            revert("Mismatched split, try again");
+            revert("!SPLIT");
         }
         uint cTok = cliq;
         uint dTok = dliq;
-        require(uint(sumOfLiquidityWithdrawn)==uint(Token_liquidity),"ERROR");
+        require(uint(sumOfLiquidityWithdrawn)==uint(Token_liquidity));
         tokenAmountDrawn[address(_community)] += cTok;
         tokenAmountDrawn[address(_development)] += dTok;
         IERC20(token).transfer(payable(_community), cliq);
