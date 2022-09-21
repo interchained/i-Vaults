@@ -18,19 +18,22 @@ interface IVAULT {
     function balanceOf(uint256 receiver) external view returns(uint256);
     function balanceOfVaults(uint256 _from, uint256 _to) external view returns(uint256);
     function balanceOfToken(uint256 receiver, address token) external view returns(uint256);
+    function wrapVault(uint256 number, bool wrap) external;
     function withdraw() external;
     function withdrawToken(address token) external;
     function withdrawFrom(uint256 number) external;
     function withdrawTokenFrom(address token, uint256 number) external;
+    function withdrawFundsFromVaultTo(uint256 _id, uint256 amount, address payable receiver) external returns (bool);
     function batchVaultRange(address token, uint256 fromWallet, uint256 toWallet) external;
     function batchWrapRange(bool wrap, uint256 fromWallet, uint256 toWallet) external;
-
 }
+
 interface IWRAP {
     function deposit() external payable;
     function withdraw(uint amount) external;
     function transfer(address dst, uint amount) external returns (bool);
 }
+
 interface IRECEIVE {
     event Transfer(address indexed from, address indexed to, uint value);
 
@@ -41,6 +44,7 @@ interface IRECEIVE {
     function split(uint liquidity) external view returns(uint,uint,uint);
     function transfer(address sender, uint256 eth, address payable receiver) external returns (bool success);
 }
+
 interface IERC20 {
     event Approval(address indexed owner, address indexed spender, uint value);
     event Transfer(address indexed from, address indexed to, uint value);
