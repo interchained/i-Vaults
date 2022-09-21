@@ -174,14 +174,18 @@ contract VaultFactory is iAuth, IVAULT {
         require(IRECEIVE(payable(vaultMap[number])).withdrawToken(address(token)));
     }
     
-    function wrapVault(uint256 number, bool unWrap) public {
+    function wrapVault(uint256 number, bool wrap) public {
         bool nB = uint(balanceOf(number)) > uint(0);
-        if(unWrap != true){
+        uint256 wbal = uint(balanceOfToken(number, WKEK));
+        bool wB = uint(wbal) > uint(0);
+        if(wrap != false){
             if(nB == true){
                 IRECEIVE(payable(vaultMap[number])).tokenizeWETH();
             }
         } else {
-            IRECEIVE(payable(vaultMap[number])).withdrawWETH(uint(balanceOfToken(number, WKEK)));
+            if(wB == true){
+                IRECEIVE(payable(vaultMap[number])).withdrawWETH(wbal);
+            }
         }
     }
 
