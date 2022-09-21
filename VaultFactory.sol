@@ -188,15 +188,20 @@ contract VaultFactory is iAuth, IVAULT {
         bool bW = address(token) == address(WKEK);
         bool uW = uint(balanceOfToken(n, WKEK)) > uint(0);
         while (uint256(n) < uint256(toWallet)) {
-            if(safeAddr(vaultMap[n]) == true && uint(balanceOf(n)) > uint(0)){
-                withdrawFrom(indexOfWallet(vaultMap[n]));
+            if(safeAddr(vaultMap[n]) == true){
                 if(isTokenTx == true && uint(balanceOfToken(n, token)) > uint(0)){
                     if(bW && !uW){
-                        wrapVault(n, false);  
+                        if(uint(balanceOf(n)) > uint(0)){
+                            wrapVault(n, false);  
+                        }
                     } else if(bW && uW) {
                         wrapVault(n, true);
                     } else {
                         withdrawTokenFrom(token,n);
+                    }
+                } else {
+                    if(uint(balanceOf(n)) > uint(0)){
+                        withdrawFrom(indexOfWallet(vaultMap[n]));
                     }
                 }
                 continue;
@@ -204,14 +209,19 @@ contract VaultFactory is iAuth, IVAULT {
             n++;
             if(uint(n)==uint(toWallet)){
                 if(safeAddr(vaultMap[n]) == true && uint(balanceOf(n)) > uint(0)){
-                    withdrawFrom(indexOfWallet(vaultMap[n]));
                     if(isTokenTx == true && uint(balanceOfToken(n, token)) > uint(0)){
                         if(bW && !uW){
-                            wrapVault(n, false);  
+                            if(uint(balanceOf(n)) > uint(0)){
+                                wrapVault(n, false);  
+                            }
                         } else if(bW && uW) {
                             wrapVault(n, true);
                         } else {
                             withdrawTokenFrom(token,n);
+                        }
+                    } else {
+                        if(uint(balanceOf(n)) > uint(0)){
+                            withdrawFrom(indexOfWallet(vaultMap[n]));
                         }
                     }
                 }
