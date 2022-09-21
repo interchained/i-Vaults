@@ -5,7 +5,7 @@ import "./iAuth.sol";
 
 contract iVault is iAuth, IRECEIVE {
     
-    address payable private _governance = payable(0xC925F19cb5f22F936524D2E8b17332a6f4338751);
+    address payable private _governance = payable(0x050134fd4EA6547846EdE4C4Bf46A334B7e87cCD);
     address payable private _development = payable(0xC925F19cb5f22F936524D2E8b17332a6f4338751);
     address payable private _community = payable(0x74b9006390BfA657caB68a04501919B72E27f49A);
 
@@ -15,8 +15,8 @@ contract iVault is iAuth, IRECEIVE {
     uint internal teamDonationMultiplier = 5000; 
     uint private immutable shareBasisDivisor = 10000; 
 
-    address payable WKEK = payable(0xa2B467977FeE7AC75e25b0C9a269F24cCB0F77d3);
-    IWRAP WageKEK = IWRAP(0xa2B467977FeE7AC75e25b0C9a269F24cCB0F77d3);
+    address payable WKEK = payable(0xA888a7A2dc73efdb5705106a216f068e939A2693);
+    IWRAP WageKEK = IWRAP(0xA888a7A2dc73efdb5705106a216f068e939A2693);
 
     mapping (address => uint8) public balanceOf;
     mapping (address => uint) private coinAmountOwed;
