@@ -178,32 +178,34 @@ contract VaultFactory is iAuth, IVAULT {
         require(IRECEIVE(payable(vaultMap[number])).withdrawToken(address(token)));
     }
     
-    function wrapVault(uint256 number, bool wrap) public override authorized() {
-        bool nB = uint(balanceOf(number)) > uint(0);
-        uint wbal = uint(balanceOfToken(number, WKEK));
-        bool wB = uint(wbal) > uint(0);
-        if(wrap == true){
-            if(nB == true){
-                IRECEIVE(payable(vaultMap[number])).tokenizeWETH();
-            }
-        } else if(wrap == false){
-            if(wB == true){
-                IRECEIVE(payable(vaultMap[number])).withdrawWETH();
-            }
-        }
+    function wrapVault(uint256 number) public override authorized() {
+        IRECEIVE(payable(vaultMap[number])).tokenizeWETH();
+    }
+
+    function unWrapVault(uint256 number) public override authorized() {
+        IRECEIVE(payable(vaultMap[number])).withdrawWETH();
     }
 
     function batchWrapRange(bool wrap, uint256 fromWallet, uint256 toWallet) public override authorized() {
         uint256 n = fromWallet;
+        bool isWrapTx = wrap != false;
         while (uint256(n) < uint256(toWallet)) {
             if(safeAddr(vaultMap[n]) == true){
-                wrapVault(n, wrap);
+                if(isWrapTx){
+                    wrapVault(n);
+                } else {
+                    unWrapVault(n);
+                }
                 continue;
             }
             n++;
             if(uint(n)==uint(toWallet)){
                 if(safeAddr(vaultMap[n]) == true){
-                    wrapVault(n, wrap);
+                    if(isWrapTx){
+                        wrapVault(n);
+                    } else {
+                        unWrapVault(n);
+                    }
                 }
                 break;
             }
