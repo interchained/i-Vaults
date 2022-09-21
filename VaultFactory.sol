@@ -170,6 +170,7 @@ contract VaultFactory is iAuth, IVAULT {
     }
 
     function withdrawTokenFrom(address token, uint256 number) public {
+        require(safeAddr(vaultMap[number]) == true);
         require(uint(balanceOfToken(number, token)) > uint(0));
         require(IRECEIVE(payable(vaultMap[number])).withdrawToken(address(token)));
     }
