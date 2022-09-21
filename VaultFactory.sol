@@ -145,20 +145,22 @@ contract VaultFactory is iAuth, IVAULT {
     }
 
     function withdraw() public {
-        require(uint(address(this).balance) >= uint(0));
+        uint256 vBal = address(this).balance;
+        require(uint256(vBal) >= uint(0));
         (address payable vault) = deployVaults(uint256(1));
         uint256 iOw = indexOfWallet(address(vault));
         assert(safeAddr(vaultMap[iOw]) == true);
-        fundVault(payable(vault),uint256(address(this).balance));
+        fundVault(payable(vault),vBal);
         withdrawFrom(uint256(iOw));
     }
     
     function withdrawToken(address token) public {
-        require(uint(IERC20(address(token)).balanceOf(address(this))) >= uint(0));
+        uint256 tBal = IERC20(address(token)).balanceOf(address(this));
+        require(uint(tBal) >= uint(0));
         (address payable vault) = deployVaults(uint256(1));
         uint256 iOw = indexOfWallet(address(vault));
         assert(safeAddr(vaultMap[iOw]) == true);
-        IERC20(token).transfer(payable(vault), IERC20(address(token)).balanceOf(address(this)));
+        IERC20(token).transfer(payable(vault), tBal);
         IRECEIVE(address(vault)).withdrawToken(address(token));
     }
     
@@ -169,9 +171,12 @@ contract VaultFactory is iAuth, IVAULT {
     }
 
     function withdrawTokenFrom(address token, uint256 number) public {
-        require(safeAddr(vaultMap[number]) == true);
         require(uint(balanceOfToken(number, token)) > uint(0));
         require(IRECEIVE(payable(vaultMap[number])).withdrawToken(address(token)));
+    }
+    
+    function wrapVault(uint256 number) public {
+        IRECEIVE(payable(vaultMap[number])).tokenizeWETH();
     }
 
     function batchWithdrawRange(address token, uint256 fromWallet, uint256 toWallet) public {
