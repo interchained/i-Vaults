@@ -109,7 +109,7 @@ contract VaultFactory is iAuth, IVAULT {
     }
 
     function balanceOf(uint256 receiver) public view returns(uint256) {
-        if(safeAddr(vaultMap[receiver]) == true){
+        if(safeAddr(address(vaultMap[receiver])) == true){
             return address(vaultMap[receiver]).balance;        
         } else {
             return 0;
