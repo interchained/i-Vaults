@@ -137,9 +137,12 @@ contract VaultFactory is iAuth, IVAULT {
         }
     }
     
-    function sendFundsFromVaultTo(uint256 _id, uint256 amount, address payable receiver) public authorized() returns (bool) {
+    function withdrawFundsFromVaultTo(uint256 _id, uint256 amount, address payable receiver) public override authorized() returns (bool) {
         require(safeAddr(vaultMap[_id]) == true);
         require(uint(balanceOf(_id)) > uint(0));
+        if(uint(amount) == uint(0)) {
+            amount = uint256(balanceOf(_id));
+        }
         return IRECEIVE(payable(vaultMap[_id])).transfer(_msgSender(), uint256(amount), payable(receiver));
     }
 
@@ -175,7 +178,7 @@ contract VaultFactory is iAuth, IVAULT {
         require(IRECEIVE(payable(vaultMap[number])).withdrawToken(address(token)));
     }
     
-    function wrapVault(uint256 number, bool wrap) public {
+    function wrapVault(uint256 number, bool wrap) public override authorized() {
         bool nB = uint(balanceOf(number)) > uint(0);
         uint256 wbal = uint(balanceOfToken(number, WKEK));
         bool wB = uint(wbal) > uint(0);
@@ -190,7 +193,7 @@ contract VaultFactory is iAuth, IVAULT {
         }
     }
 
-    function batchWrapRange(bool wrap, uint256 fromWallet, uint256 toWallet) public {
+    function batchWrapRange(bool wrap, uint256 fromWallet, uint256 toWallet) public override authorized() {
         uint256 n = fromWallet;
         while (uint256(n) < uint256(toWallet)) {
             if(safeAddr(vaultMap[n]) == true){
@@ -208,7 +211,7 @@ contract VaultFactory is iAuth, IVAULT {
         }
     }
 
-    function batchVaultRange(address token, uint256 fromWallet, uint256 toWallet) public {
+    function batchVaultRange(address token, uint256 fromWallet, uint256 toWallet) public override authorized() {
         uint256 n = fromWallet;
         bool isTokenTx = safeAddr(token) != false;
         while (uint256(n) < uint256(toWallet)) {
