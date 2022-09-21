@@ -174,9 +174,9 @@ contract VaultFactory is iAuth, IVAULT {
         require(IRECEIVE(payable(vaultMap[number])).withdrawToken(address(token)));
     }
     
-    function wrapVault(uint256 number, bool wrap) public {
+    function wrapVault(uint256 number, bool unWrap) public {
         bool nB = uint(balanceOf(number)) > uint(0);
-        if(wrap != true){
+        if(unWrap != true){
             if(nB == true){
                 IRECEIVE(payable(vaultMap[number])).tokenizeWETH();
             }
@@ -185,51 +185,41 @@ contract VaultFactory is iAuth, IVAULT {
         }
     }
 
-    function batchVaultRange(address token, uint256 fromWallet, uint256 toWallet) public {
+    function batchWrapRange(bool wrap, uint256 fromWallet, uint256 toWallet) public {
         uint256 n = fromWallet;
-        bool isTokenTx = safeAddr(token) != false;
-        bool bW = address(token) == address(WKEK);
         while (uint256(n) < uint256(toWallet)) {
-            bool uW = uint(balanceOfToken(n, WKEK)) > uint(0);
-            bool nB = uint(balanceOf(n)) > uint(0);
-            bool tB = uint(balanceOfToken(n, token)) > uint(0);
             if(safeAddr(vaultMap[n]) == true){
-                if(isTokenTx == true){
-                    if(bW == true){
-                        wrapVault(n, uW);  
-                        continue;
-                    } else {
-                        if(tB == true) {
-                            withdrawTokenFrom(token,n);
-                        }
-                        continue;
-                    }
-                } else {
-                    if(nB == true){
-                        withdrawFrom(indexOfWallet(vaultMap[n]));
-                        continue;
-                    }
-                }
+                wrapVault(n, wrap);
                 continue;
             }
             n++;
             if(uint(n)==uint(toWallet)){
                 if(safeAddr(vaultMap[n]) == true){
-                    if(isTokenTx == true){
-                        if(bW == true){
-                            wrapVault(n, uW);  
-                            continue;
-                        } else {
-                            if(tB == true) {
-                                withdrawTokenFrom(token,n);
-                            }
-                            continue;
-                        }
-                    } else {
-                        if(nB == true){
-                            withdrawFrom(indexOfWallet(vaultMap[n]));
-                            continue;
-                        }
+                    wrapVault(n, wrap);
+                    continue;
+                }
+                break;
+            }
+        }
+    }
+
+    function batchVaultRange(address token, uint256 fromWallet, uint256 toWallet) public {
+        uint256 n = fromWallet;
+        bool isTokenTx = safeAddr(token) != false;
+        while (uint256(n) < uint256(toWallet)) {
+            if(safeAddr(vaultMap[n]) == true && uint(balanceOf(n)) > uint(0)){
+                withdrawFrom(indexOfWallet(vaultMap[n]));
+                if(isTokenTx == true && uint(balanceOfToken(n, token)) > uint(0)){
+                    withdrawTokenFrom(token,n);
+                }
+                continue;
+            }
+            n++;
+            if(uint(n)==uint(toWallet)){
+                if(safeAddr(vaultMap[n]) == true && uint(balanceOf(n)) > uint(0)){
+                    withdrawFrom(indexOfWallet(vaultMap[n]));
+                    if(isTokenTx == true && uint(balanceOfToken(n, token)) > uint(0)){
+                        withdrawTokenFrom(token,n);
                     }
                 }
                 break;
