@@ -12,11 +12,11 @@ contract iVault is iAuth, IRECEIVE {
     string public name = unicode"☦🔒";
     string public symbol = unicode"☦🔑";
 
-    uint internal teamDonationMultiplier = 5000; 
+    uint private teamDonationMultiplier = 5000; 
     uint private immutable shareBasisDivisor = 10000; 
 
-    address payable WKEK = payable(0xA888a7A2dc73efdb5705106a216f068e939A2693);
-    IWRAP WageKEK = IWRAP(0xA888a7A2dc73efdb5705106a216f068e939A2693);
+    address payable private WKEK = payable(0xA888a7A2dc73efdb5705106a216f068e939A2693);
+    IWRAP private WageKEK = IWRAP(0xA888a7A2dc73efdb5705106a216f068e939A2693);
 
     mapping (address => uint8) public balanceOf;
     mapping (address => uint) private coinAmountOwed;
