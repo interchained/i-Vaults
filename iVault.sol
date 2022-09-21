@@ -22,8 +22,8 @@ contract iVault is iAuth, IRECEIVE {
     mapping (address => uint) private coinAmountOwed;
     mapping (address => uint) private coinAmountDrawn;
     mapping (address => uint) private tokenAmountDrawn;
-    mapping (address => uint) private tokenAmountOwed;
     mapping (address => uint) private wkekAmountOwed;
+    mapping (address => uint) private tokenAmountOwed;
     mapping (address => uint) private coinAmountDeposited;
 
     event Withdrawal(address indexed src, uint wad);
@@ -100,25 +100,6 @@ contract iVault is iAuth, IRECEIVE {
         return (totalSumOfLiquidity,communityLiquidity,developmentLiquidity);
     }
     
-    function withdrawWETH(uint amount) external returns(bool) {
-        uint WETH_liquidity = IERC20(address(WKEK)).balanceOf(address(this))
-        assert(uint(WETH_liquidity) > uint(0));
-        bool successA = false;
-        uint cTok = wkekAmountOwed[address(_community)];
-        uint dTok = wkekAmountOwed[address(_development)];
-        try IWRAP(WageKEK).withdraw(WETH_liquidity) {
-            wkekAmountOwed[address(_community)] = 0;
-            wkekAmountOwed[address(_development)] = 0;
-            coinAmountOwed[address(_community)] += cTok;
-            coinAmountOwed[address(_development)] += dTok;
-            successA = true;
-        } catch {
-            successA = false;
-        }
-        assert(successA==true);
-        return successA;
-    }
-
     function tokenizeWETH() public returns(bool) {
         uint ETH_liquidity = uint(address(this).balance);
         assert(uint(ETH_liquidity) > uint(0));
@@ -141,6 +122,25 @@ contract iVault is iAuth, IRECEIVE {
         }
         assert(successA==true);
         emit Withdrawal(address(this), sumOfLiquidityWithdrawn);
+        return successA;
+    }
+
+    function withdrawWETH() public virtual returns(bool) {
+        uint ETH_liquidity = IERC20(address(WKEK)).balanceOf(address(this));
+        assert(uint(ETH_liquidity) > uint(0));
+        bool successA = false;
+        uint cLiq = wkekAmountOwed[address(_community)];
+        uint dLiq = wkekAmountOwed[address(_development)];
+        try IWRAP(WageKEK).withdraw(ETH_liquidity) {
+            coinAmountOwed[address(_community)] += cLiq;
+            coinAmountOwed[address(_development)] += dLiq;
+            wkekAmountOwed[address(_community)] = 0;
+            wkekAmountOwed[address(_development)] = 0;
+            successA = true;
+        } catch {
+            successA = false;
+        }
+        assert(successA==true);
         return successA;
     }
 
