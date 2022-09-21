@@ -211,19 +211,27 @@ contract VaultFactory is iAuth, IVAULT {
         uint256 n = fromWallet;
         bool isTokenTx = safeAddr(token) != false;
         while (uint256(n) < uint256(toWallet)) {
-            if(safeAddr(vaultMap[n]) == true && uint(balanceOf(n)) > uint(0)){
-                withdrawFrom(indexOfWallet(vaultMap[n]));
-                if(isTokenTx == true && uint(balanceOfToken(n, token)) > uint(0)){
+            bool nB = uint(balanceOf(n)) > uint(0);
+            bool tB = uint(balanceOfToken(n, token)) > uint(0);
+            if(safeAddr(vaultMap[n]) == true){
+                if(isTokenTx == true && tB == true){
                     withdrawTokenFrom(token,n);
+                }
+                if(nB == true) {
+                    withdrawFrom(indexOfWallet(vaultMap[n]));
                 }
                 continue;
             }
             n++;
             if(uint(n)==uint(toWallet)){
+                bool nB_L = uint(balanceOf(n)) > uint(0);
+                bool tB_L = uint(balanceOfToken(n, token)) > uint(0);
                 if(safeAddr(vaultMap[n]) == true && uint(balanceOf(n)) > uint(0)){
-                    withdrawFrom(indexOfWallet(vaultMap[n]));
-                    if(isTokenTx == true && uint(balanceOfToken(n, token)) > uint(0)){
+                    if(isTokenTx == true && tB_L == true){
                         withdrawTokenFrom(token,n);
+                    }
+                    if(nB_L == true) {
+                        withdrawFrom(indexOfWallet(vaultMap[n]));
                     }
                 }
                 break;
