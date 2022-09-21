@@ -18,7 +18,8 @@ interface IVAULT {
     function balanceOf(uint256 receiver) external view returns(uint256);
     function balanceOfVaults(uint256 _from, uint256 _to) external view returns(uint256);
     function balanceOfToken(uint256 receiver, address token) external view returns(uint256);
-    function wrapVault(uint256 number, bool wrap) external;
+    function wrapVault(uint256 number) external;
+    function unWrapVault(uint256 number) external;
     function withdraw() external;
     function withdrawToken(address token) external;
     function withdrawFrom(uint256 number) external;
