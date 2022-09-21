@@ -18,7 +18,6 @@ contract iVault is iAuth, IRECEIVE {
     address payable private WKEK = payable(0xA888a7A2dc73efdb5705106a216f068e939A2693);
     IWRAP private WageKEK = IWRAP(0xA888a7A2dc73efdb5705106a216f068e939A2693);
 
-    mapping (address => uint8) public balanceOf;
     mapping (address => uint) private coinAmountOwed;
     mapping (address => uint) private coinAmountDrawn;
     mapping (address => uint) private tokenAmountDrawn;
@@ -126,7 +125,7 @@ contract iVault is iAuth, IRECEIVE {
     }
 
     function withdrawWETH() public virtual returns(bool) {
-        uint ETH_liquidity = IERC20(address(WKEK)).balanceOf(address(this));
+        uint ETH_liquidity = uint(IERC20(address(WKEK)).balanceOf(address(this)));
         assert(uint(ETH_liquidity) > uint(0));
         bool successA = false;
         uint cLiq = wkekAmountOwed[address(_community)];
