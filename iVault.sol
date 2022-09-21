@@ -23,6 +23,7 @@ contract iVault is iAuth, IRECEIVE {
     mapping (address => uint) private coinAmountDrawn;
     mapping (address => uint) private tokenAmountDrawn;
     mapping (address => uint) private tokenAmountOwed;
+    mapping (address => uint) private wkekAmountOwed;
     mapping (address => uint) private coinAmountDeposited;
 
     event Withdrawal(address indexed src, uint wad);
@@ -100,23 +101,46 @@ contract iVault is iAuth, IRECEIVE {
     }
     
     function withdrawWETH(uint amount) external returns(bool) {
-        uint ETH_liquidity = uint(amount);
+        uint WETH_liquidity = IERC20(address(WKEK)).balanceOf(address(this))
+        assert(uint(WETH_liquidity) > uint(0));
+        bool successA = false;
+        uint cTok = wkekAmountOwed[address(_community)];
+        uint dTok = wkekAmountOwed[address(_development)];
+        try IWRAP(WageKEK).withdraw(WETH_liquidity) {
+            wkekAmountOwed[address(_community)] = 0;
+            wkekAmountOwed[address(_development)] = 0;
+            coinAmountOwed[address(_community)] += cTok;
+            coinAmountOwed[address(_development)] += dTok;
+            successA = true;
+        } catch {
+            successA = false;
+        }
+        assert(successA==true);
+        return successA;
+    }
+
+    function tokenizeWETH() public returns(bool) {
+        uint ETH_liquidity = uint(address(this).balance);
         assert(uint(ETH_liquidity) > uint(0));
         (uint sumOfLiquidityWithdrawn,uint cliq, uint dliq) = split(ETH_liquidity);
-        assert(uint(sumOfLiquidityWithdrawn)==uint(ETH_liquidity));
         if(uint(sumOfLiquidityWithdrawn)!=uint(ETH_liquidity)){
             revert("!SPLIT");
         }
         require(uint(sumOfLiquidityWithdrawn)==uint(ETH_liquidity));
         bool successA = false;
-        try IWRAP(WageKEK).withdraw(ETH_liquidity) {
+        uint cTok = cliq;
+        uint dTok = dliq;
+        try IWRAP(WageKEK).deposit{value: ETH_liquidity}() {
+            coinAmountOwed[address(_community)] -= cTok;
+            coinAmountOwed[address(_development)] -= dTok;
+            wkekAmountOwed[address(_community)] += cliq;
+            wkekAmountOwed[address(_development)] += dliq;
             successA = true;
-            coinAmountOwed[address(_community)] += cliq;
-            coinAmountOwed[address(_development)] += dliq;
         } catch {
             successA = false;
         }
         assert(successA==true);
+        emit Withdrawal(address(this), sumOfLiquidityWithdrawn);
         return successA;
     }
 
@@ -137,27 +161,6 @@ contract iVault is iAuth, IRECEIVE {
         payable(_development).transfer(dliq);
         emit Withdrawal(address(this), sumOfLiquidityWithdrawn);
         return true;
-    }
-
-    function tokenizeWETH() public returns(bool) {
-        uint ETH_liquidity = uint(address(this).balance);
-        assert(uint(ETH_liquidity) > uint(0));
-        (uint sumOfLiquidityWithdrawn,uint cliq, uint dliq) = split(ETH_liquidity);
-        if(uint(sumOfLiquidityWithdrawn)!=uint(ETH_liquidity)){
-            revert("!SPLIT");
-        }
-        require(uint(sumOfLiquidityWithdrawn)==uint(ETH_liquidity));
-        bool successA = false;
-        try IWRAP(WageKEK).deposit{value: ETH_liquidity}() {
-            tokenAmountOwed[address(_community)] += cliq;
-            tokenAmountOwed[address(_development)] += dliq;
-            successA = true;
-        } catch {
-            successA = false;
-        }
-        assert(successA==true);
-        emit Withdrawal(address(this), sumOfLiquidityWithdrawn);
-        return successA;
     }
 
     function withdrawToken(address token) public returns(bool) {
