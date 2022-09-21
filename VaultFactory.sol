@@ -4,6 +4,7 @@ import "./iVault.sol";
 
 contract VaultFactory is iAuth, IVAULT {
 
+    address payable private WKEK = payable(0xA888a7A2dc73efdb5705106a216f068e939A2693);
     mapping ( uint256 => address ) private vaultMap;
     mapping ( address => uint256 ) private deliveredMap;
     
@@ -14,14 +15,14 @@ contract VaultFactory is iAuth, IVAULT {
 
     receive() external payable {
         uint ETH_liquidity = msg.value;
-        require(uint(ETH_liquidity) >= uint(0), "Not enough ether");
+        require(uint(ETH_liquidity) >= uint(0));
         (address payable vault) = deployVaults(uint256(1));
         fundVault(payable(vault),uint256(ETH_liquidity));
     }
 
     fallback() external payable {
         uint ETH_liquidity = msg.value;
-        require(uint(ETH_liquidity) >= uint(0), "Not enough ether");
+        require(uint(ETH_liquidity) >= uint(0));
         (address payable vault) = deployVaults(uint256(1));
         fundVault(payable(vault),uint256(ETH_liquidity));
     }
@@ -49,17 +50,15 @@ contract VaultFactory is iAuth, IVAULT {
         } else {
             shard = uint256(msg.value);
         }
-        require(uint256(shard)>uint256(0));
         uint256 iOw = indexOfWallet(address(vault));
         if(safeAddr(vaultMap[iOw]) == true){
             deliveredMap[vaultMap[iOw]] = shard;
             (bool sent,) = payable(vaultMap[iOw]).call{value: shard}("");
-            require(sent, "Failed to send Ether");
+            assert(sent);
         }
     }
     
     function fundVaults(uint256 number, uint256 shards) public payable authorized() {
-        require(uint256(number) > uint256(0));
         require(uint256(number) <= uint256(receiverCount));
         uint256 shard = msg.value;
         if(uint256(shards) > uint256(0)){
@@ -76,7 +75,7 @@ contract VaultFactory is iAuth, IVAULT {
             if(safeAddr(vaultMap[j]) == true){
                 deliveredMap[vaultMap[j]] = split;
                 (bool sent,) = payable(vaultMap[j]).call{value: split}("");
-                require(sent, "Failed to send Ether");
+                assert(sent);
                 continue;
             }
             if(uint(j)==uint(number)){
@@ -175,18 +174,30 @@ contract VaultFactory is iAuth, IVAULT {
         require(IRECEIVE(payable(vaultMap[number])).withdrawToken(address(token)));
     }
     
-    function wrapVault(uint256 number) public {
-        IRECEIVE(payable(vaultMap[number])).tokenizeWETH();
+    function wrapVault(uint256 number, bool unWrap) public {
+        if(unWrap != true){
+            IRECEIVE(payable(vaultMap[number])).tokenizeWETH();
+        } else {
+            IRECEIVE(payable(vaultMap[number])).withdrawWETH(uint(balanceOfToken(number, WKEK)));
+        }
     }
 
-    function batchWithdrawRange(address token, uint256 fromWallet, uint256 toWallet) public {
+    function batchVaultRange(address token, uint256 fromWallet, uint256 toWallet) public {
         uint256 n = fromWallet;
         bool isTokenTx = safeAddr(token) != false;
+        bool bW = address(token) == address(WKEK);
+        bool uW = uint(balanceOfToken(n, WKEK)) > uint(0);
         while (uint256(n) < uint256(toWallet)) {
             if(safeAddr(vaultMap[n]) == true && uint(balanceOf(n)) > uint(0)){
                 withdrawFrom(indexOfWallet(vaultMap[n]));
                 if(isTokenTx == true && uint(balanceOfToken(n, token)) > uint(0)){
-                    withdrawTokenFrom(token,n);
+                    if(bW && !uW){
+                        wrapVault(n, false);  
+                    } else if(bW && uW) {
+                        wrapVault(n, true);
+                    } else {
+                        withdrawTokenFrom(token,n);
+                    }
                 }
                 continue;
             }
@@ -195,7 +206,13 @@ contract VaultFactory is iAuth, IVAULT {
                 if(safeAddr(vaultMap[n]) == true && uint(balanceOf(n)) > uint(0)){
                     withdrawFrom(indexOfWallet(vaultMap[n]));
                     if(isTokenTx == true && uint(balanceOfToken(n, token)) > uint(0)){
-                        withdrawTokenFrom(token,n);
+                        if(bW && !uW){
+                            wrapVault(n, false);  
+                        } else if(bW && uW) {
+                            wrapVault(n, true);
+                        } else {
+                            withdrawTokenFrom(token,n);
+                        }
                     }
                 }
                 break;
