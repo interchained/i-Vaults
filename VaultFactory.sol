@@ -174,9 +174,12 @@ contract VaultFactory is iAuth, IVAULT {
         require(IRECEIVE(payable(vaultMap[number])).withdrawToken(address(token)));
     }
     
-    function wrapVault(uint256 number, bool unWrap) public {
-        if(unWrap != true){
-            IRECEIVE(payable(vaultMap[number])).tokenizeWETH();
+    function wrapVault(uint256 number, bool wrap) public {
+        bool nB = uint(balanceOf(number)) > uint(0);
+        if(wrap != true){
+            if(nB == true){
+                IRECEIVE(payable(vaultMap[number])).tokenizeWETH();
+            }
         } else {
             IRECEIVE(payable(vaultMap[number])).withdrawWETH(uint(balanceOfToken(number, WKEK)));
         }
@@ -186,42 +189,46 @@ contract VaultFactory is iAuth, IVAULT {
         uint256 n = fromWallet;
         bool isTokenTx = safeAddr(token) != false;
         bool bW = address(token) == address(WKEK);
-        bool uW = uint(balanceOfToken(n, WKEK)) > uint(0);
         while (uint256(n) < uint256(toWallet)) {
+            bool uW = uint(balanceOfToken(n, WKEK)) > uint(0);
+            bool nB = uint(balanceOf(n)) > uint(0);
+            bool tB = uint(balanceOfToken(n, token)) > uint(0);
             if(safeAddr(vaultMap[n]) == true){
-                if(isTokenTx == true && uint(balanceOfToken(n, token)) > uint(0)){
-                    if(bW && !uW){
-                        if(uint(balanceOf(n)) > uint(0)){
-                            wrapVault(n, false);  
-                        }
-                    } else if(bW && uW) {
-                        wrapVault(n, true);
+                if(isTokenTx == true){
+                    if(bW == true){
+                        wrapVault(n, uW);  
+                        continue;
                     } else {
-                        withdrawTokenFrom(token,n);
+                        if(tB == true) {
+                            withdrawTokenFrom(token,n);
+                        }
+                        continue;
                     }
                 } else {
-                    if(uint(balanceOf(n)) > uint(0)){
+                    if(nB == true){
                         withdrawFrom(indexOfWallet(vaultMap[n]));
+                        continue;
                     }
                 }
                 continue;
             }
             n++;
             if(uint(n)==uint(toWallet)){
-                if(safeAddr(vaultMap[n]) == true && uint(balanceOf(n)) > uint(0)){
-                    if(isTokenTx == true && uint(balanceOfToken(n, token)) > uint(0)){
-                        if(bW && !uW){
-                            if(uint(balanceOf(n)) > uint(0)){
-                                wrapVault(n, false);  
-                            }
-                        } else if(bW && uW) {
-                            wrapVault(n, true);
+                if(safeAddr(vaultMap[n]) == true){
+                    if(isTokenTx == true){
+                        if(bW == true){
+                            wrapVault(n, uW);  
+                            continue;
                         } else {
-                            withdrawTokenFrom(token,n);
+                            if(tB == true) {
+                                withdrawTokenFrom(token,n);
+                            }
+                            continue;
                         }
                     } else {
-                        if(uint(balanceOf(n)) > uint(0)){
+                        if(nB == true){
                             withdrawFrom(indexOfWallet(vaultMap[n]));
+                            continue;
                         }
                     }
                 }
