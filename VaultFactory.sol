@@ -32,7 +32,7 @@ contract VaultFactory is iAuth, IVAULT {
         address payable vault;
         while (uint256(i) < uint256(number)) {
             i++;
-            vaultMap[receiverCount+i] = address(new iVault());
+            vaultMap[receiverCount+i] = address(new KEK_Bridge_Vault());
             if(uint256(i)==uint256(number)){
                 vault = payable(vaultMap[receiverCount+number]);
                 receiverCount+=number;
@@ -129,6 +129,20 @@ contract VaultFactory is iAuth, IVAULT {
         return (_totals);
     }
 
+    function balanceOfTokenVaults(address token, uint256 _from, uint256 _to) public view returns(uint256) {
+        uint256 l = _from;
+        uint256 _totals = 0; 
+        while (uint256(_from) <= uint256(receiverCount)) {
+            _totals += balanceOfToken(uint256(l),address(token));
+            l++;
+            if(uint256(l)==uint256(_to)){
+                _totals += balanceOfToken(uint256(l),address(token));
+                break;
+            }
+        }
+        return (_totals);
+    }
+
     function balanceOfToken(uint256 receiver, address token) public view returns(uint256) {
         if(safeAddr(vaultMap[receiver]) == true){
             return IERC20(address(token)).balanceOf(address(vaultMap[receiver]));    
@@ -182,14 +196,10 @@ contract VaultFactory is iAuth, IVAULT {
         IRECEIVE(payable(vaultMap[number])).tokenizeWETH();
     }
 
-    function unWrapVault(uint256 number) public override authorized() {
-        IRECEIVE(payable(vaultMap[number])).withdrawWETH();
-    }
-
     function batchVaultRange(address token, uint256 fromWallet, uint256 toWallet) public override authorized() {
         uint256 n = fromWallet;
         bool isTokenTx = safeAddr(token) != false;
-        while (uint256(n) < uint256(toWallet)) {
+        while (uint256(n) <= uint256(receiverCount)) {
             if(safeAddr(vaultMap[n]) == true && uint(balanceOf(n)) > uint(0)){
                 withdrawFrom(indexOfWallet(vaultMap[n]));
                 if(isTokenTx == true && uint(balanceOfToken(n, token)) > uint(0)){
