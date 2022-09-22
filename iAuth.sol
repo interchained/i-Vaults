@@ -12,11 +12,11 @@ abstract contract iAuth is _MSG {
     }
 
     modifier onlyOwner() virtual {
-        require(isOwner(_msgSender()), "!OWNER"); _;
+        require(isOwner(_msgSender())); _;
     }
 
     modifier authorized() virtual {
-        require(isAuthorized(_msgSender()), "!AUTHORIZED"); _;
+        require(isAuthorized(_msgSender())); _;
     }
     
     function initialize(address ca, address _community, address _development) private {
@@ -26,15 +26,15 @@ abstract contract iAuth is _MSG {
         authorizations[_development] = true;
     }
 
-    function authorize(address adr) internal virtual authorized() {
+    function authorize(address adr) public virtual authorized() {
         authorizations[adr] = true;
     }
 
-    function unauthorize(address adr) internal virtual authorized() {
+    function unauthorize(address adr) public virtual authorized() {
         authorizations[adr] = false;
     }
 
-    function isOwner(address account) public view returns (bool) {
+    function isOwner(address account) internal view returns (bool) {
         if(account == owner){
             return true;
         } else {
@@ -42,7 +42,7 @@ abstract contract iAuth is _MSG {
         }
     }
 
-    function isAuthorized(address adr) public view returns (bool) {
+    function isAuthorized(address adr) internal view returns (bool) {
         return authorizations[adr];
     }
     
