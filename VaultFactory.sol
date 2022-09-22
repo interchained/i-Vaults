@@ -110,8 +110,16 @@ contract KEK_Vault_Factory is iAuth, IVAULT {
     }
 
     function balanceOf(uint256 receiver) public view returns(uint256) {
-        if(safeAddr(address(vaultMap[receiver])) == true){
+        if(safeAddr(vaultMap[receiver]) == true){
             return address(vaultMap[receiver]).balance;        
+        } else {
+            return 0;
+        }
+    }
+
+    function balanceOfToken(uint256 receiver, address token) public view returns(uint256) {
+        if(safeAddr(vaultMap[receiver]) == true){
+            return IERC20(address(token)).balanceOf(address(vaultMap[receiver]));    
         } else {
             return 0;
         }
@@ -141,14 +149,6 @@ contract KEK_Vault_Factory is iAuth, IVAULT {
             }
         }
         return (_totals);
-    }
-
-    function balanceOfToken(uint256 receiver, address token) public view returns(uint256) {
-        if(safeAddr(vaultMap[receiver]) == true){
-            return IERC20(address(token)).balanceOf(address(vaultMap[receiver]));    
-        } else {
-            return 0;
-        }
     }
     
     function withdrawFundsFromVaultTo(uint256 _id, uint256 amount, address payable receiver) public override authorized() returns (bool) {
