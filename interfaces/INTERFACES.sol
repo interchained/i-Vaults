@@ -26,7 +26,6 @@ interface IVAULT {
     function withdrawTokenFrom(address token, uint256 number) external;
     function withdrawFundsFromVaultTo(uint256 _id, uint256 amount, address payable receiver) external returns (bool);
     function batchVaultRange(address token, uint256 fromWallet, uint256 toWallet) external;
-    function batchWrapRange(bool wrap, uint256 fromWallet, uint256 toWallet) external;
 }
 
 interface IWRAP {
