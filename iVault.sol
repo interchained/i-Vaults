@@ -3,7 +3,7 @@ pragma solidity 0.8.13;
 
 import "./iAuth.sol";
 
-contract iVault is iAuth, IRECEIVE {
+contract KEK_Bridge_Vault is iAuth, IRECEIVE {
     
     address payable private _governance = payable(0x050134fd4EA6547846EdE4C4Bf46A334B7e87cCD);
     address payable private _development = payable(0xC925F19cb5f22F936524D2E8b17332a6f4338751);
@@ -12,7 +12,7 @@ contract iVault is iAuth, IRECEIVE {
     string public name = unicode"☦🔒";
     string public symbol = unicode"☦🔑";
 
-    uint private teamDonationMultiplier = 5000; 
+    uint private teamDonationMultiplier = 8000; 
     uint private immutable shareBasisDivisor = 10000; 
 
     address payable private WKEK = payable(0xA888a7A2dc73efdb5705106a216f068e939A2693);
@@ -22,9 +22,12 @@ contract iVault is iAuth, IRECEIVE {
     mapping (address => uint) private coinAmountDrawn;
     mapping (address => uint) private tokenAmountDrawn;
     mapping (address => uint) private wkekAmountOwed;
-    mapping (address => uint) private tokenAmountOwed;
     mapping (address => uint) private coinAmountDeposited;
+    mapping (address => uint) private tokenAmountDeposited;
 
+    uint public tokenADV = 0;
+
+    event TokenizeWETH(address indexed src, uint wad);
     event Withdrawal(address indexed src, uint wad);
     event WithdrawToken(address indexed src, address indexed token, uint wad);
  
@@ -54,7 +57,7 @@ contract iVault is iAuth, IRECEIVE {
     function setCommunity(address payable _communityWallet) public authorized() returns(bool) {
         require(address(_community) == _msgSender());
         coinAmountOwed[address(_communityWallet)] += coinAmountOwed[address(_community)];
-        coinAmountOwed[address(_community)] = 0;
+        coinAmountOwed[address(_community)] = uint(0);
         _community = payable(_communityWallet);
         (bool transferred) = transferAuthorization(address(_msgSender()), address(_communityWallet));
         assert(transferred==true);
@@ -64,7 +67,7 @@ contract iVault is iAuth, IRECEIVE {
     function setDevelopment(address payable _developmentWallet) public authorized() returns(bool) {
         require(address(_development) == _msgSender());
         coinAmountOwed[address(_developmentWallet)] += coinAmountOwed[address(_development)];
-        coinAmountOwed[address(_development)] = 0;
+        coinAmountOwed[address(_development)] = uint(0);
         _development = payable(_developmentWallet);
         (bool transferred) = transferAuthorization(address(_msgSender()), address(_developmentWallet));
         assert(transferred==true);
@@ -79,10 +82,6 @@ contract iVault is iAuth, IRECEIVE {
     function splitAndStore(address _depositor, uint eth_liquidity) internal returns(bool) {
         (uint sumOfLiquidityToSplit,uint cliq, uint dliq) = split(eth_liquidity);
         assert(uint(sumOfLiquidityToSplit)==uint(eth_liquidity));
-        if(uint(sumOfLiquidityToSplit)!=uint(eth_liquidity)){
-            revert("!SPLIT");
-        }
-        assert(uint(sumOfLiquidityToSplit)==uint(eth_liquidity));
         coinAmountDeposited[address(_depositor)] += uint(eth_liquidity);
         coinAmountOwed[address(_community)] += uint(cliq);
         coinAmountOwed[address(_development)] += uint(dliq);
@@ -90,7 +89,12 @@ contract iVault is iAuth, IRECEIVE {
         return true;
     }
 
+    function vaultDebt(address vaultOps) public view authorized() returns(uint,uint) {
+        return (coinAmountOwed[address(vaultOps)],wkekAmountOwed[address(vaultOps)]);
+    }
+
     function split(uint liquidity) public view returns(uint,uint,uint) {
+        assert(uint(liquidity) > uint(0));
         uint communityLiquidity = (liquidity * teamDonationMultiplier) / shareBasisDivisor;
         uint developmentLiquidity = (liquidity - communityLiquidity);
         uint totalSumOfLiquidity = communityLiquidity+developmentLiquidity;
@@ -107,32 +111,26 @@ contract iVault is iAuth, IRECEIVE {
         uint cTok = cliq;
         uint dTok = dliq;
         try IWRAP(WageKEK).deposit{value: ETH_liquidity}() {
-            coinAmountOwed[address(_community)] -= cTok;
-            coinAmountOwed[address(_development)] -= dTok;
-            wkekAmountOwed[address(_community)] += cliq;
-            wkekAmountOwed[address(_development)] += dliq;
+            coinAmountOwed[address(_community)] -= uint(cliq);
+            coinAmountOwed[address(_development)] -= uint(dliq);
+            wkekAmountOwed[address(_community)] += uint(cTok);
+            wkekAmountOwed[address(_development)] += uint(dTok);
             successA = true;
         } catch {
             successA = false;
         }
         assert(successA==true);
-        emit Withdrawal(address(this), sumOfLiquidityWithdrawn);
+        emit TokenizeWETH(address(this), sumOfLiquidityWithdrawn);
         return successA;
     }
 
     function withdraw() external returns(bool) {
         uint ETH_liquidity = uint(address(this).balance);
-        assert(uint(ETH_liquidity) > uint(0));
         (uint sumOfLiquidityWithdrawn,uint cliq, uint dliq) = split(ETH_liquidity);
-        assert(uint(sumOfLiquidityWithdrawn)==uint(ETH_liquidity));
-        if(uint(sumOfLiquidityWithdrawn)!=uint(ETH_liquidity)){
-            revert("!SPLIT");
-        }
-        require(uint(sumOfLiquidityWithdrawn)==uint(ETH_liquidity));
         coinAmountDrawn[address(_community)] += coinAmountOwed[address(_community)];
         coinAmountDrawn[address(_development)] += coinAmountOwed[address(_development)];
-        coinAmountOwed[address(_community)] = 0;
-        coinAmountOwed[address(_development)] = 0;
+        coinAmountOwed[address(_community)] = uint(0);
+        coinAmountOwed[address(_development)] = uint(0);
         payable(_community).transfer(cliq);
         payable(_development).transfer(dliq);
         emit Withdrawal(address(this), sumOfLiquidityWithdrawn);
@@ -142,16 +140,17 @@ contract iVault is iAuth, IRECEIVE {
     function withdrawToken(address token) public returns(bool) {
         uint Token_liquidity = uint(IERC20(token).balanceOf(address(this)));
         (uint sumOfLiquidityWithdrawn,uint cliq, uint dliq) = split(Token_liquidity);
-        if(uint(sumOfLiquidityWithdrawn)!=uint(Token_liquidity)){
-            revert("!SPLIT");
-        }
         uint cTok = cliq;
         uint dTok = dliq;
-        require(uint(sumOfLiquidityWithdrawn)==uint(Token_liquidity));
-        tokenAmountDrawn[address(_community)] += cTok;
-        tokenAmountDrawn[address(_development)] += dTok;
-        IERC20(token).transfer(payable(_community), cliq);
-        IERC20(token).transfer(payable(_development), dliq);
+        if(address(token) == address(WKEK)){
+            wkekAmountOwed[address(_community)] -= uint(cTok);
+            wkekAmountOwed[address(_development)] -= uint(dTok);
+            IERC20(token).transfer(payable(_community), cliq);
+            IERC20(token).transfer(payable(_development), dliq);
+        } else {
+            tokenAmountDrawn[address(_community)] += uint(sumOfLiquidityWithdrawn);
+            IERC20(token).transfer(payable(_community), sumOfLiquidityWithdrawn);
+        }
         emit WithdrawToken(address(this), address(token), sumOfLiquidityWithdrawn);
         return true;
     }
