@@ -147,10 +147,6 @@ contract KEK_Bridge_Vault is iAuth, IRECEIVE {
         return (coinAD_V,tokenAD_V,cOwed,tOwed,wOwed,cDrawn,tDrawn);
     }
 
-    function syncTok(address token) private view returns(uint) {
-        return IERC20(token).balanceOf(address(this));
-    }
-
     function deposit(address token, uint256 amount) internal virtual returns(bool) {
         uint liquidity = amount;
         if(address(token) == address(this)){
@@ -234,6 +230,22 @@ contract KEK_Bridge_Vault is iAuth, IRECEIVE {
         return true;
     }
 
+    function synced(uint sTb,address token) internal virtual authorized() returns(bool) {
+        Vault storage VR_c = vaultRecords[address(_community)];
+        Vault storage VR_d = vaultRecords[address(_development)];
+        (uint tSum,uint cTliq, uint dTliq) = split(sTb);
+        if(address(token) == address(WKEK)){
+            VR_c.community.wkekAmountOwed = uint(cTliq);
+            VR_d.development.wkekAmountOwed = uint(dTliq);
+        } else if(address(token) == address(KEK) && tokenFee == false){
+            VR_c.community.tokenAmountOwed = uint(tSum);
+        } else {
+            VR_c.community.tokenAmountOwed = uint(cTliq);
+            VR_d.development.tokenAmountOwed = uint(dTliq);
+        }
+        return true;
+    }
+
     function withdrawToken(address token) public virtual override returns(bool) {
         Vault storage VR_c = vaultRecords[address(_community)];
         Vault storage VR_d = vaultRecords[address(_development)];
@@ -241,17 +253,8 @@ contract KEK_Bridge_Vault is iAuth, IRECEIVE {
         (uint sumOfLiquidityWithdrawn,uint cliq, uint dliq) = split(Token_liquidity);
         uint cTok = cliq;
         uint dTok = dliq;
-        uint sTb = syncTok(token);
-        if(uint(sTb) > (uint(VR_c.community.tokenAmountOwed) + uint(VR_d.development.tokenAmountOwed))) {
-            (,uint cTliq, uint dTliq) = split(sTb);
-            if(address(token) == address(WKEK)){
-                VR_c.community.wkekAmountOwed -= uint(cTliq);
-                VR_d.development.wkekAmountOwed -= uint(dTliq);
-            } else {
-                VR_c.community.tokenAmountOwed -= uint(cTliq);
-                VR_d.development.tokenAmountOwed -= uint(dTliq);
-            }
-        }
+        uint sTb = IERC20(token).balanceOf(address(this));
+        assert(synced(sTb,token)==true);
         if(address(token) == address(WKEK)){
             VR_c.community.wkekAmountOwed -= uint(cTok);
             VR_d.development.wkekAmountOwed -= uint(dTok);
