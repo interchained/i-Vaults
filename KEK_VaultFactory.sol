@@ -2,7 +2,7 @@
 pragma solidity 0.8.13;
 import "./kekVault.sol";
 
-contract KEK_Vault_Factory is iAuth, IKEKVAULT {
+contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
 
     address payable private _development = payable(0x050134fd4EA6547846EdE4C4Bf46A334B7e87cCD);
     address payable private _community = payable(0x74b9006390BfA657caB68a04501919B72E27f49A);
@@ -158,7 +158,7 @@ contract KEK_Vault_Factory is iAuth, IKEKVAULT {
         if(uint(amount) == uint(0)) {
             amount = uint256(balanceOf(_id));
         }
-        return IRECEIVE(payable(vaultMap[_id])).transfer(_msgSender(), uint256(amount), payable(receiver));
+        return IRECEIVE_KEK(payable(vaultMap[_id])).transfer(_msgSender(), uint256(amount), payable(receiver));
     }
 
     function withdraw() public {
@@ -174,25 +174,25 @@ contract KEK_Vault_Factory is iAuth, IKEKVAULT {
         uint256 iOw = indexOfWallet(address(vault));
         assert(safeAddr(vaultMap[iOw]) == true);
         IERC20(token).transfer(payable(vault), IERC20(address(token)).balanceOf(address(this)));
-        IRECEIVE(address(vault)).withdrawToken(address(token));
+        IRECEIVE_KEK(address(vault)).withdrawToken(address(token));
     }
     
     function withdrawFrom(uint256 number) public {
-        require(IRECEIVE(payable(vaultMap[number])).withdraw());
+        require(IRECEIVE_KEK(payable(vaultMap[number])).withdraw());
     }
 
     function withdrawTokenFrom(address token, uint256 number) public {
         require(safeAddr(vaultMap[number]) == true);
-        require(IRECEIVE(payable(vaultMap[number])).withdrawToken(address(token)));
+        require(IRECEIVE_KEK(payable(vaultMap[number])).withdrawToken(address(token)));
     }
     
     function wrapVault(uint256 number) public override authorized() {
         require(safeAddr(vaultMap[number]) == true);
-        IRECEIVE(payable(vaultMap[number])).tokenizeWETH();
+        IRECEIVE_KEK(payable(vaultMap[number])).tokenizeWETH();
     }
 
     function checkVaultDebt(uint number, address operator) public view authorized() returns(uint,uint,uint,uint,uint,uint,uint) {
-        return IRECEIVE(payable(vaultMap[number])).vaultDebt(address(operator));
+        return IRECEIVE_KEK(payable(vaultMap[number])).vaultDebt(address(operator));
     }
 
     function batchVaultRange(address token, uint256 fromWallet, uint256 toWallet) public override authorized() {
