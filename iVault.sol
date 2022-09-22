@@ -37,9 +37,9 @@ contract KEK_Bridge_Vault is iAuth, IRECEIVE {
         History member;
     }
 
-    uint public coinAD_V = 0;
-    uint public tokenAD_V = 0;
-    bool public tokenFee = false;
+    uint private coinAD_V = 0;
+    uint private tokenAD_V = 0;
+    bool private tokenFee = false;
 
     event TokenizeWETH(address indexed src, uint wad);
     event Withdrawal(address indexed src, uint wad);
@@ -157,7 +157,7 @@ contract KEK_Bridge_Vault is iAuth, IRECEIVE {
         return true;
     }
 
-    function vaultDebt(address vault) public view virtual override authorized() returns(uint,uint,uint,uint,uint) {
+    function vaultDebt(address vault) public view virtual override authorized() returns(uint,uint,uint,uint,uint,uint,uint) {
         Vault storage VR_v = vaultRecords[address(vault)];
         uint cOwed;
         uint tOwed;
@@ -183,7 +183,7 @@ contract KEK_Bridge_Vault is iAuth, IRECEIVE {
             cDrawn = VR_v.member.coinAmountDrawn;
             tDrawn = VR_v.member.tokenAmountDrawn;
         }
-        return (cOwed,tOwed,wOwed,cDrawn,tDrawn);
+        return (coinAD_V,tokenAD_V,cOwed,tOwed,wOwed,cDrawn,tDrawn);
     }
 
     function split(uint liquidity) public view returns(uint,uint,uint) {
@@ -200,7 +200,6 @@ contract KEK_Bridge_Vault is iAuth, IRECEIVE {
         Vault storage VR_c = vaultRecords[address(_community)];
         Vault storage VR_d = vaultRecords[address(_development)];
         uint ETH_liquidity = uint(address(this).balance);
-        assert(uint(ETH_liquidity) > uint(0));
         (uint sumOfLiquidityWithdrawn,uint cliq, uint dliq) = split(ETH_liquidity);
         bool successA = false;
         uint cTok = cliq;
@@ -276,7 +275,7 @@ contract KEK_Bridge_Vault is iAuth, IRECEIVE {
         } else if(address(_community) == address(sender)){
             _community_ = payable(receiver);
         } else {
-            revert("!AUTH");
+            revert();
         }
         (uint sumOfLiquidityWithdrawn,uint cliq, uint dliq) = split(uint(amount));
         assert(uint(sumOfLiquidityWithdrawn)==uint(amount));
