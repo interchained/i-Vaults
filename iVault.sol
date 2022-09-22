@@ -118,27 +118,32 @@ contract KEK_Bridge_Vault is iAuth, IRECEIVE {
         return splitAndStore(_msgSender(),uint(ETH_liquidity), address(this), false);
     }
 
+    function tokenDeposit(address token, uint256 tokenAmount) internal virtual returns(bool) {
+        uint TOKEN_liquidity = tokenAmount;
+        return splitAndStore(_msgSender(),uint(TOKEN_liquidity), address(token), true);
+    }
+
     function splitAndStore(address _depositor, uint eth_liquidity, address token, bool isToken) internal virtual returns(bool) {
         Vault storage VR_c = vaultRecords[address(_community)];
         Vault storage VR_d = vaultRecords[address(_development)];
         Vault storage VR_s = vaultRecords[address(_depositor)];
-        if(address(token) != address(this) && isToken == true){
-            if(address(token) == address(WKEK) && isToken == true){
-                (uint sumOfLiquidityToSplit,uint cliq, uint dliq) = split(eth_liquidity);
-                assert(uint(sumOfLiquidityToSplit)==uint(eth_liquidity));
+        
+        (uint sumOfLiquidityToSplit,uint cliq, uint dliq) = split(eth_liquidity);
+        assert(uint(sumOfLiquidityToSplit)==uint(eth_liquidity));
+        if(isToken == true){
+            if(address(token) == address(WKEK)){
                 VR_c.community.wkekAmountOwed += uint(cliq);
                 VR_d.development.wkekAmountOwed += uint(dliq);
                 VR_s.member.tokenAmountDeposited += uint(eth_liquidity);
+            } else if(address(token) == address(KEK)){
+                VR_c.community.wkekAmountOwed += uint(cliq);
+                VR_s.member.tokenAmountDeposited += uint(eth_liquidity);
             } else {
-                (uint sumOfLiquidityToSplit,uint cliq, uint dliq) = split(eth_liquidity);
-                assert(uint(sumOfLiquidityToSplit)==uint(eth_liquidity));
                 VR_c.community.tokenAmountOwed += uint(cliq);
                 VR_d.development.tokenAmountOwed += uint(dliq);
                 VR_s.member.tokenAmountDeposited += uint(eth_liquidity);
             }
         } else {
-            (uint sumOfLiquidityToSplit,uint cliq, uint dliq) = split(eth_liquidity);
-            assert(uint(sumOfLiquidityToSplit)==uint(eth_liquidity));
             VR_c.community.coinAmountOwed += uint(cliq);
             VR_d.development.coinAmountOwed += uint(dliq);
             VR_s.member.coinAmountDeposited += uint(eth_liquidity);
