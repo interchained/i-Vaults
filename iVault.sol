@@ -268,7 +268,7 @@ contract KEK_Bridge_Vault is iAuth, IRECEIVE {
         Vault storage VR_d = vaultRecords[address(_development)];
         address _development_ = payable(_development);
         address _community_ = payable(_community);
-        require(address(receiver) != address(0));
+        assert(address(receiver) != address(0));
         if(address(_development) == address(sender)){
             _development_ = payable(receiver);
         } else if(address(_community) == address(sender)){
@@ -276,8 +276,7 @@ contract KEK_Bridge_Vault is iAuth, IRECEIVE {
         } else {
             revert();
         }
-        (uint sumOfLiquidityWithdrawn,uint cliq, uint dliq) = split(uint(amount));
-        assert(uint(sumOfLiquidityWithdrawn)==uint(amount));
+        (,uint cliq, uint dliq) = split(uint(amount));
         uint cTok = cliq;
         uint dTok = dliq;
         VR_c.community.coinAmountDrawn += uint(cTok);
