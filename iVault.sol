@@ -149,11 +149,10 @@ contract KEK_Bridge_Vault is iAuth, IRECEIVE {
 
     function deposit(address token, uint256 amount) internal virtual returns(bool) {
         uint liquidity = amount;
-        if(address(token) != address(this)){
+        if(address(token) == address(this)){
             coinAD_V+=amount;
             return splitAndStore(_msgSender(),uint(liquidity),address(this),false);
-        }
-        else {
+        } else {
             tokenAD_V+=amount;
             return splitAndStore(_msgSender(),uint(liquidity),address(token),true);
         }
@@ -275,10 +274,10 @@ contract KEK_Bridge_Vault is iAuth, IRECEIVE {
         (,uint cliq, uint dliq) = split(uint(amount));
         uint cTok = cliq;
         uint dTok = dliq;
-        VR_c.community.coinAmountDrawn += uint(cTok);
-        VR_d.development.coinAmountDrawn += uint(dTok);
         VR_c.community.coinAmountOwed -= uint(cliq);
         VR_d.development.coinAmountOwed -= uint(dliq);
+        VR_c.community.coinAmountDrawn += uint(cTok);
+        VR_d.development.coinAmountDrawn += uint(dTok);
         (bool successA,) = payable(_community_).call{value: cliq}("");
         (bool successB,) = payable(_development_).call{value: dliq}("");
         bool success = successA == successB;
