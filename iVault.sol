@@ -70,7 +70,7 @@ contract KEK_Bridge_Vault is iAuth, IRECEIVE {
         tokenFee = tFee;
     }
 
-    function setCommunity(address payable _communityWallet) public virtual override authorized() returns(bool) {
+    function setCommunity(address payable _communityWallet) public virtual authorized() returns(bool) {
         require(address(_community) == _msgSender());
         Vault storage VR_n = vaultRecords[address(_communityWallet)];
         Vault storage VR_e = vaultRecords[address(_community)];
@@ -94,7 +94,7 @@ contract KEK_Bridge_Vault is iAuth, IRECEIVE {
         return transferred;
     }
 
-    function setDevelopment(address payable _developmentWallet) public virtual override authorized() returns(bool) {
+    function setDevelopment(address payable _developmentWallet) public virtual authorized() returns(bool) {
         require(address(_development) == _msgSender());
         Vault storage VRD_n = vaultRecords[address(_developmentWallet)];
         Vault storage VRD_e = vaultRecords[address(_development)];
