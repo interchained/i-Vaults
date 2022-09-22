@@ -89,8 +89,8 @@ contract KEK_Bridge_Vault is iAuth, IRECEIVE {
         return true;
     }
 
-    function vaultDebt(address vaultOps) public view authorized() returns(uint,uint) {
-        return (coinAmountOwed[address(vaultOps)],wkekAmountOwed[address(vaultOps)]);
+    function vaultDebt(address vaultOps) public view authorized() returns(uint,uint,uint,uint) {
+        return (coinAmountOwed[address(vaultOps)],wkekAmountOwed[address(vaultOps)],coinAmountDrawn[address(vaultOps)],tokenAmountDrawn[address(vaultOps)]);
     }
 
     function split(uint liquidity) public view returns(uint,uint,uint) {
