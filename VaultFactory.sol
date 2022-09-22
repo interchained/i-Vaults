@@ -193,7 +193,7 @@ contract KEK_Vault_Factory is iAuth, IVAULT {
         IRECEIVE(payable(vaultMap[number])).tokenizeWETH();
     }
 
-    function checkVaultDebt(uint number, address operator) public virtual authorized() returns(uint,uint,uint,uint,uint,uint,uint) {
+    function checkVaultDebt(uint number, address operator) public view authorized() returns(uint,uint,uint,uint,uint,uint,uint) {
         return IRECEIVE(payable(vaultMap[number])).vaultDebt(address(operator));
     }
 
