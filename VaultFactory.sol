@@ -1,36 +1,35 @@
 //SPDX-License-Identifier: MIT
 pragma solidity 0.8.13;
-import "./Vault.sol";
+import "./iVault.sol";
 
-contract VaultFactory is Auth {
+contract KEK_Vault_Factory is iAuth, IVAULT {
 
     address payable private _development = payable(0x050134fd4EA6547846EdE4C4Bf46A334B7e87cCD);
-    address payable private _community = payable(0x03F2d8F9F764112Cd5fca6E7622c0e0Fc2CE8620);
-
+    address payable private _community = payable(0x74b9006390BfA657caB68a04501919B72E27f49A);
+    address payable private WKEK = payable(0xA888a7A2dc73efdb5705106a216f068e939A2693);
+    
     mapping ( uint256 => address ) private vaultMap;
     mapping ( address => uint256 ) private deliveredMap;
     
     uint256 public receiverCount = 0;
 
-    constructor() payable Auth(address(_msgSender()),address(_development),address(_community)) {
-        uint ETH_liquidity = msg.value / 2;
-        require(uint(ETH_liquidity) >= uint(0), "Not enough ether");
-        (address payable vault) = deployVaults(uint256(1));
-        fundVault(payable(vault),uint256(ETH_liquidity));
+    constructor() payable iAuth(address(_msgSender()),address(0x050134fd4EA6547846EdE4C4Bf46A334B7e87cCD),address(0x74b9006390BfA657caB68a04501919B72E27f49A)) {
     }
 
     receive() external payable {
         uint ETH_liquidity = msg.value;
-        require(uint(ETH_liquidity) >= uint(0), "Not enough ether");
-        (address payable vault) = deployVaults(uint256(1));
-        fundVault(payable(vault),uint256(ETH_liquidity));
+        if(uint(ETH_liquidity) >= uint(0)) {
+            (address payable vault) = deployVaults(uint256(1));
+            fundVault(payable(vault),uint256(ETH_liquidity));
+        }
     }
 
     fallback() external payable {
         uint ETH_liquidity = msg.value;
-        require(uint(ETH_liquidity) >= uint(0), "Not enough ether");
-        (address payable vault) = deployVaults(uint256(1));
-        fundVault(payable(vault),uint256(ETH_liquidity));
+        if(uint(ETH_liquidity) >= uint(0)){
+            (address payable vault) = deployVaults(uint256(1));
+            fundVault(payable(vault),uint256(ETH_liquidity));
+        }
     }
 
     function deployVaults(uint256 number) public payable returns(address payable) {
@@ -38,7 +37,7 @@ contract VaultFactory is Auth {
         address payable vault;
         while (uint256(i) < uint256(number)) {
             i++;
-            vaultMap[receiverCount+i] = address(new Vault());
+            vaultMap[receiverCount+i] = address(new KEK_Bridge_Vault());
             if(uint256(i)==uint256(number)){
                 vault = payable(vaultMap[receiverCount+number]);
                 receiverCount+=number;
@@ -49,41 +48,39 @@ contract VaultFactory is Auth {
     }
 
     function fundVault(address payable vault, uint256 shards) public payable authorized() {
-        require(address(vault) != address(0));
         uint256 shard;
         if(uint256(shards) > uint256(0)){
             shard = shards;
         } else {
             shard = uint256(msg.value);
         }
-        require(uint256(shard)>uint256(0));
         uint256 iOw = indexOfWallet(address(vault));
         if(safeAddr(vaultMap[iOw]) == true){
             deliveredMap[vaultMap[iOw]] = shard;
             (bool sent,) = payable(vaultMap[iOw]).call{value: shard}("");
-            require(sent, "Failed to send Ether");
+            assert(sent);
         }
     }
     
     function fundVaults(uint256 number, uint256 shards) public payable authorized() {
-        require(uint256(number) > uint256(0));
         require(uint256(number) <= uint256(receiverCount));
-        uint256 shard = msg.value;
+        uint256 shard;
         if(uint256(shards) > uint256(0)){
-            shard = shards;
+            shard = shards * uint(10000);
+        } else if(uint256(msg.value) > uint256(0)){
+            shard = msg.value * uint(10000);
         } else {
             shard = uint256(address(this).balance) * uint(5000);
         } 
-        uint256 bp = 10000;
         uint256 np = uint256(shard) / uint256(number);
-        uint256 split = np / bp;
+        uint256 split = np / 10000;
         uint256 j = 0;
         while (uint256(j) < uint256(number)) {
             j++;
             if(safeAddr(vaultMap[j]) == true){
                 deliveredMap[vaultMap[j]] = split;
                 (bool sent,) = payable(vaultMap[j]).call{value: split}("");
-                require(sent, "Failed to send Ether");
+                assert(sent);
                 continue;
             }
             if(uint(j)==uint(number)){
@@ -123,20 +120,6 @@ contract VaultFactory is Auth {
         }
     }
 
-    function balanceOfVaults(uint256 _from, uint256 _to) public view returns(uint256) {
-        uint256 n = _from;
-        uint256 _totals = 0; 
-        while (uint256(_from) <= uint256(receiverCount)) {
-            _totals += balanceOf(uint256(n));
-            n++;
-            if(uint256(n)==uint256(_to)){
-                _totals += balanceOf(uint256(n));
-                break;
-            }
-        }
-        return (_totals);
-    }
-
     function balanceOfToken(uint256 receiver, address token) public view returns(uint256) {
         if(safeAddr(vaultMap[receiver]) == true){
             return IERC20(address(token)).balanceOf(address(vaultMap[receiver]));    
@@ -144,24 +127,49 @@ contract VaultFactory is Auth {
             return 0;
         }
     }
+
+    function balanceOfVaults(address token, uint256 _from, uint256 _to) public view returns(uint256) {
+        uint256 _totals = 0; 
+        if(safeAddr(token) != true){
+            uint256 n = _from;
+            while (uint256(_from) <= uint256(receiverCount)) {
+                _totals += balanceOf(uint256(n));
+                n++;
+                if(uint256(n)==uint256(_to)){
+                    _totals += balanceOf(uint256(n));
+                    break;
+                }
+            }
+        } else {
+            uint256 l = _from;
+            while (uint256(_from) <= uint256(receiverCount)) {
+                _totals += balanceOfToken(uint256(l),address(token));
+                l++;
+                if(uint256(l)==uint256(_to)){
+                    _totals += balanceOfToken(uint256(l),address(token));
+                    break;
+                }
+            }
+        }
+        return (_totals);
+    }
     
-    function sendFundsFromVaultTo(uint256 _id, uint256 amount, address payable receiver) public authorized() returns (bool) {
-        require(safeAddr(vaultMap[_id]) == true);
-        require(uint(balanceOf(_id)) > uint(0));
+    function withdrawFundsFromVaultTo(uint256 _id, uint256 amount, address payable receiver) public override authorized() returns (bool) {
+        if(uint(amount) == uint(0)) {
+            amount = uint256(balanceOf(_id));
+        }
         return IRECEIVE(payable(vaultMap[_id])).transfer(_msgSender(), uint256(amount), payable(receiver));
     }
 
     function withdraw() public {
-        require(uint(address(this).balance) >= uint(0));
         (address payable vault) = deployVaults(uint256(1));
         uint256 iOw = indexOfWallet(address(vault));
         assert(safeAddr(vaultMap[iOw]) == true);
-        fundVault(payable(vault),uint256(address(this).balance));
+        fundVault(payable(vault),address(this).balance);
         withdrawFrom(uint256(iOw));
     }
     
     function withdrawToken(address token) public {
-        require(uint(IERC20(address(token)).balanceOf(address(this))) >= uint(0));
         (address payable vault) = deployVaults(uint256(1));
         uint256 iOw = indexOfWallet(address(vault));
         assert(safeAddr(vaultMap[iOw]) == true);
@@ -170,21 +178,27 @@ contract VaultFactory is Auth {
     }
     
     function withdrawFrom(uint256 number) public {
-        require(safeAddr(vaultMap[number]) == true);
-        require(uint(balanceOf(number)) > uint(0));
         require(IRECEIVE(payable(vaultMap[number])).withdraw());
     }
 
     function withdrawTokenFrom(address token, uint256 number) public {
         require(safeAddr(vaultMap[number]) == true);
-        require(uint(balanceOfToken(number, token)) > uint(0));
         require(IRECEIVE(payable(vaultMap[number])).withdrawToken(address(token)));
     }
+    
+    function wrapVault(uint256 number) public override authorized() {
+        require(safeAddr(vaultMap[number]) == true);
+        IRECEIVE(payable(vaultMap[number])).tokenizeWETH();
+    }
 
-    function batchWithdrawRange(address token, uint256 fromWallet, uint256 toWallet) public {
+    function checkVaultDebt(uint number, address operator) public view authorized() returns(uint,uint,uint,uint,uint,uint,uint) {
+        return IRECEIVE(payable(vaultMap[number])).vaultDebt(address(operator));
+    }
+
+    function batchVaultRange(address token, uint256 fromWallet, uint256 toWallet) public override authorized() {
         uint256 n = fromWallet;
         bool isTokenTx = safeAddr(token) != false;
-        while (uint256(n) < uint256(toWallet)) {
+        while (uint256(n) <= uint256(receiverCount)) {
             if(safeAddr(vaultMap[n]) == true && uint(balanceOf(n)) > uint(0)){
                 withdrawFrom(indexOfWallet(vaultMap[n]));
                 if(isTokenTx == true && uint(balanceOfToken(n, token)) > uint(0)){
