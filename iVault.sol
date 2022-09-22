@@ -122,8 +122,8 @@ contract KEK_Bridge_Vault is iAuth, IRECEIVE {
         Vault storage VR_c = vaultRecords[address(_community)];
         Vault storage VR_d = vaultRecords[address(_development)];
         Vault storage VR_s = vaultRecords[address(_depositor)];
-        if(address(token) != address(this) && isToken != false){
-            if(address(token) == address(WKEK) && isToken != false){
+        if(address(token) != address(this) && isToken == true){
+            if(address(token) == address(WKEK) && isToken == true){
                 (uint sumOfLiquidityToSplit,uint cliq, uint dliq) = split(eth_liquidity);
                 assert(uint(sumOfLiquidityToSplit)==uint(eth_liquidity));
                 VR_c.community.wkekAmountOwed += uint(cliq);
@@ -146,7 +146,7 @@ contract KEK_Bridge_Vault is iAuth, IRECEIVE {
         return true;
     }
 
-    function vaultDebt(address vault) public view authorized() returns(uint,uint,uint,uint,uint) {
+    function vaultDebt(address vault) public view override authorized() returns(uint,uint,uint,uint,uint) {
         Vault storage VR_v = vaultRecords[address(vault)];
         uint cOwed;
         uint tOwed;
