@@ -17,13 +17,23 @@ contract KEK_Bridge_Vault is iAuth, IRECEIVE {
 
     address payable private WKEK = payable(0xA888a7A2dc73efdb5705106a216f068e939A2693);
     IWRAP private WageKEK = IWRAP(0xA888a7A2dc73efdb5705106a216f068e939A2693);
+    
+    mapping(address => User) private vaultRecords;
 
-    mapping (address => uint) private coinAmountOwed;
-    mapping (address => uint) private coinAmountDrawn;
-    mapping (address => uint) private tokenAmountDrawn;
-    mapping (address => uint) private wkekAmountOwed;
-    mapping (address => uint) private coinAmountDeposited;
-    mapping (address => uint) private tokenAmountDeposited;
+    struct History {
+        uint coinAmountOwed; 
+        uint coinAmountDrawn; 
+        uint coinAmountDeposited; 
+        uint wkekAmountOwed;    
+        uint tokenAmountOwed;
+        uint tokenAmountDrawn; 
+        uint tokenAmountDeposited;
+    }
+    
+    struct Vault {
+        History community;
+        History development;
+    }
 
     uint public tokenADV = 0;
 
@@ -56,8 +66,22 @@ contract KEK_Bridge_Vault is iAuth, IRECEIVE {
 
     function setCommunity(address payable _communityWallet) public authorized() returns(bool) {
         require(address(_community) == _msgSender());
-        coinAmountOwed[address(_communityWallet)] += coinAmountOwed[address(_community)];
-        coinAmountOwed[address(_community)] = uint(0);
+        Vault storage VR_n = vaultRecords[_communityWallet];
+        Vault storage VR_e = vaultRecords[_community];
+        VR_n.community.coinAmountOwed += VR_e.community.coinAmountOwed;
+        VR_n.community.coinAmountDrawn += VR_e.community.coinAmountDrawn;
+        VR_n.community.coinAmountDeposited += VR_e.community.coinAmountDeposited;
+        VR_n.community.wkekAmountOwed += VR_e.community.wkekAmountOwed;
+        VR_n.community.tokenAmountOwed += VR_e.community.tokenAmountOwed;
+        VR_n.community.tokenAmountDrawn += VR_e.community.tokenAmountDrawn;
+        VR_n.community.tokenAmountDeposited += VR_e.community.tokenAmountDeposited;
+        VR_e.community.coinAmountOwed = uint(0);
+        VR_e.community.coinAmountDrawn = uint(0);
+        VR_e.community.coinAmountDeposited = uint(0);
+        VR_e.community.coinAmountDeposited = uint(0);
+        VR_e.community.tokenAmountOwed = uint(0);
+        VR_e.community.tokenAmountDrawn = uint(0);
+        VR_e.community.tokenAmountDeposited = uint(0);
         _community = payable(_communityWallet);
         (bool transferred) = transferAuthorization(address(_msgSender()), address(_communityWallet));
         assert(transferred==true);
@@ -66,8 +90,22 @@ contract KEK_Bridge_Vault is iAuth, IRECEIVE {
 
     function setDevelopment(address payable _developmentWallet) public authorized() returns(bool) {
         require(address(_development) == _msgSender());
-        coinAmountOwed[address(_developmentWallet)] += coinAmountOwed[address(_development)];
-        coinAmountOwed[address(_development)] = uint(0);
+        Vault storage VRD_n = vaultRecords[_developmentWallet];
+        Vault storage VRD_e = vaultRecords[_development];
+        VRD_n.development.coinAmountOwed += VRD_e.development.coinAmountOwed;
+        VRD_n.development.coinAmountDrawn += VRD_e.development.coinAmountDrawn;
+        VRD_n.development.coinAmountDeposited += VRD_e.development.coinAmountDeposited;
+        VRD_n.development.wkekAmountOwed += VRD_e.development.wkekAmountOwed;
+        VRD_n.development.tokenAmountOwed += VRD_e.development.tokenAmountOwed;
+        VRD_n.development.tokenAmountDrawn += VRD_e.development.tokenAmountDrawn;
+        VRD_n.development.tokenAmountDeposited += VRD_e.development.tokenAmountDeposited;
+        VRD_e.development.coinAmountOwed = uint(0);
+        VRD_e.development.coinAmountDrawn = uint(0);
+        VRD_e.development.coinAmountDeposited = uint(0);
+        VRD_e.development.coinAmountDeposited = uint(0);
+        VRD_e.development.tokenAmountOwed = uint(0);
+        VRD_e.development.tokenAmountDrawn = uint(0);
+        VRD_e.development.tokenAmountDeposited = uint(0);
         _development = payable(_developmentWallet);
         (bool transferred) = transferAuthorization(address(_msgSender()), address(_developmentWallet));
         assert(transferred==true);
@@ -76,16 +114,23 @@ contract KEK_Bridge_Vault is iAuth, IRECEIVE {
 
     function coinDeposit(uint256 amountETH) internal returns(bool) {
         uint ETH_liquidity = amountETH;
-        return splitAndStore(_msgSender(),uint(ETH_liquidity));
+        return splitAndStore(_msgSender(),uint(ETH_liquidity), address(this), false);
     }
 
-    function splitAndStore(address _depositor, uint eth_liquidity) internal returns(bool) {
-        (uint sumOfLiquidityToSplit,uint cliq, uint dliq) = split(eth_liquidity);
-        assert(uint(sumOfLiquidityToSplit)==uint(eth_liquidity));
-        coinAmountDeposited[address(_depositor)] += uint(eth_liquidity);
-        coinAmountOwed[address(_community)] += uint(cliq);
-        coinAmountOwed[address(_development)] += uint(dliq);
-        
+    function splitAndStore(address _depositor, uint eth_liquidity, address token, bool isToken) internal returns(bool) {
+        if(address(token) != address(this) && isToken != false){
+            (uint sumOfLiquidityToSplit,uint cliq, uint dliq) = split(eth_liquidity);
+            assert(uint(sumOfLiquidityToSplit)==uint(eth_liquidity));
+            tokenAmountDeposited[address(_depositor)] += uint(eth_liquidity);
+            tokenAmountOwed[address(_community)] += uint(cliq);
+            tokenAmountOwed[address(_development)] += uint(dliq);
+        } else {
+            (uint sumOfLiquidityToSplit,uint cliq, uint dliq) = split(eth_liquidity);
+            assert(uint(sumOfLiquidityToSplit)==uint(eth_liquidity));
+            coinAmountDeposited[address(_depositor)] += uint(eth_liquidity);
+            coinAmountOwed[address(_community)] += uint(cliq);
+            coinAmountOwed[address(_development)] += uint(dliq);
+        }
         return true;
     }
 
