@@ -29,8 +29,7 @@ interface IVAULT {
 
 interface IWRAP {
     function deposit() external payable;
-    function withdraw(uint amount) external;
-    function transfer(address dst, uint amount) external returns (bool);
+    function transfer(address payable dst, uint amount) external returns (bool);
 }
 
 interface IRECEIVE {
