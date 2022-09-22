@@ -155,7 +155,6 @@ contract KEK_Vault_Factory is iAuth, IVAULT {
     }
     
     function withdrawFundsFromVaultTo(uint256 _id, uint256 amount, address payable receiver) public override authorized() returns (bool) {
-        require(safeAddr(vaultMap[_id]) == true);
         if(uint(amount) == uint(0)) {
             amount = uint256(balanceOf(_id));
         }
@@ -179,7 +178,6 @@ contract KEK_Vault_Factory is iAuth, IVAULT {
     }
     
     function withdrawFrom(uint256 number) public {
-        require(safeAddr(vaultMap[number]) == true);
         require(IRECEIVE(payable(vaultMap[number])).withdraw());
     }
 
