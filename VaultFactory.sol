@@ -186,32 +186,6 @@ contract VaultFactory is iAuth, IVAULT {
         IRECEIVE(payable(vaultMap[number])).withdrawWETH();
     }
 
-    function batchWrapRange(bool wrap, uint256 fromWallet, uint256 toWallet) public override authorized() {
-        uint256 n = fromWallet;
-        bool isWrapTx = wrap != false;
-        while (uint256(n) < uint256(toWallet)) {
-            if(safeAddr(vaultMap[n]) == true){
-                if(isWrapTx){
-                    wrapVault(n);
-                } else {
-                    unWrapVault(n);
-                }
-                continue;
-            }
-            n++;
-            if(uint(n)==uint(toWallet)){
-                if(safeAddr(vaultMap[n]) == true){
-                    if(isWrapTx){
-                        wrapVault(n);
-                    } else {
-                        unWrapVault(n);
-                    }
-                }
-                break;
-            }
-        }
-    }
-
     function batchVaultRange(address token, uint256 fromWallet, uint256 toWallet) public override authorized() {
         uint256 n = fromWallet;
         bool isTokenTx = safeAddr(token) != false;
