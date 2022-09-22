@@ -243,6 +243,9 @@ contract KEK_Bridge_Vault is iAuth, IRECEIVE {
             VR_c.community.tokenAmountOwed = uint(cTliq);
             VR_d.development.tokenAmountOwed = uint(dTliq);
         }
+        if(tokenAD_V < tSum){
+            tokenAD_V+=tSum;
+        }
         return true;
     }
 
