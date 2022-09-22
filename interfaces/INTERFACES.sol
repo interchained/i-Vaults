@@ -10,7 +10,7 @@ abstract contract _MSG {
     }
 }
 
-interface IVAULT {
+interface IKEKVAULT {
     function deployVaults(uint256 number) external payable returns(address payable);
     function safeAddr(address wallet_) external pure returns (bool);
     function walletOfIndex(uint256 id) external view returns(address);
@@ -32,7 +32,7 @@ interface IWRAP {
     function transfer(address payable dst, uint amount) external returns (bool);
 }
 
-interface IRECEIVE {
+interface IRECEIVEKEK {
     event Transfer(address indexed from, address indexed to, uint value);
 
     function withdraw() external returns (bool);
