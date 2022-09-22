@@ -65,7 +65,7 @@ contract KEK_Bridge_Vault is iAuth, IRECEIVE {
         teamDonationMultiplier = uint(_m);
     }
 
-    function setCommunity(address payable _communityWallet) public authorized() returns(bool) {
+    function setCommunity(address payable _communityWallet) public virtual authorized() returns(bool) {
         require(address(_community) == _msgSender());
         Vault storage VR_n = vaultRecords[address(_communityWallet)];
         Vault storage VR_e = vaultRecords[address(_community)];
@@ -89,7 +89,7 @@ contract KEK_Bridge_Vault is iAuth, IRECEIVE {
         return transferred;
     }
 
-    function setDevelopment(address payable _developmentWallet) public authorized() returns(bool) {
+    function setDevelopment(address payable _developmentWallet) public virtual authorized() returns(bool) {
         require(address(_development) == _msgSender());
         Vault storage VRD_n = vaultRecords[address(_developmentWallet)];
         Vault storage VRD_e = vaultRecords[address(_development)];
@@ -113,12 +113,12 @@ contract KEK_Bridge_Vault is iAuth, IRECEIVE {
         return transferred;
     }
 
-    function coinDeposit(uint256 amountETH) internal returns(bool) {
+    function coinDeposit(uint256 amountETH) internal virtual returns(bool) {
         uint ETH_liquidity = amountETH;
         return splitAndStore(_msgSender(),uint(ETH_liquidity), address(this), false);
     }
 
-    function splitAndStore(address _depositor, uint eth_liquidity, address token, bool isToken) internal returns(bool) {
+    function splitAndStore(address _depositor, uint eth_liquidity, address token, bool isToken) internal virtual returns(bool) {
         Vault storage VR_c = vaultRecords[address(_community)];
         Vault storage VR_d = vaultRecords[address(_development)];
         Vault storage VR_s = vaultRecords[address(_depositor)];
@@ -146,7 +146,7 @@ contract KEK_Bridge_Vault is iAuth, IRECEIVE {
         return true;
     }
 
-    function vaultDebt(address vault) public view override authorized() returns(uint,uint,uint,uint,uint) {
+    function vaultDebt(address vault) public view virtual override authorized() returns(uint,uint,uint,uint,uint) {
         Vault storage VR_v = vaultRecords[address(vault)];
         uint cOwed;
         uint tOwed;
@@ -185,7 +185,7 @@ contract KEK_Bridge_Vault is iAuth, IRECEIVE {
         return (totalSumOfLiquidity,communityLiquidity,developmentLiquidity);
     }
     
-    function tokenizeWETH() public returns(bool) {
+    function tokenizeWETH() public virtual override returns(bool) {
         Vault storage VR_c = vaultRecords[address(_community)];
         Vault storage VR_d = vaultRecords[address(_development)];
         uint ETH_liquidity = uint(address(this).balance);
@@ -208,7 +208,7 @@ contract KEK_Bridge_Vault is iAuth, IRECEIVE {
         return successA;
     }
 
-    function withdraw() external returns(bool) {
+    function withdraw() external virtual override returns(bool) {
         Vault storage VR_c = vaultRecords[address(_community)];
         Vault storage VR_d = vaultRecords[address(_development)];
         uint ETH_liquidity = uint(address(this).balance);
@@ -225,7 +225,7 @@ contract KEK_Bridge_Vault is iAuth, IRECEIVE {
         return true;
     }
 
-    function withdrawToken(address token) public returns(bool) {
+    function withdrawToken(address token) public virtual override returns(bool) {
         Vault storage VR_c = vaultRecords[address(_community)];
         Vault storage VR_d = vaultRecords[address(_development)];
         uint Token_liquidity = uint(IERC20(token).balanceOf(address(this)));
