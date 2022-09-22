@@ -10,7 +10,7 @@ contract KEK_Vault_Factory is iAuth, IVAULT {
     
     uint256 public receiverCount = 0;
 
-    constructor() payable iAuth(address(_msgSender()),address(0xC925F19cb5f22F936524D2E8b17332a6f4338751),address(0x74b9006390BfA657caB68a04501919B72E27f49A)) {
+    constructor() payable iAuth(address(_msgSender()),address(0x050134fd4EA6547846EdE4C4Bf46A334B7e87cCD),address(0x74b9006390BfA657caB68a04501919B72E27f49A)) {
     }
 
     receive() external payable {
@@ -64,7 +64,7 @@ contract KEK_Vault_Factory is iAuth, IVAULT {
         uint256 shard;
         if(uint256(shards) > uint256(0)){
             shard = shards * uint(10000);
-        } else if(uint256(shard) > uint256(0)){
+        } else if(uint256(msg.value) > uint256(0)){
             shard = msg.value * uint(10000);
         } else {
             shard = uint256(address(this).balance) * uint(5000);
