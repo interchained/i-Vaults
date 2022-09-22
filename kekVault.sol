@@ -3,7 +3,7 @@ pragma solidity 0.8.13;
 
 import "./iAuth.sol";
 
-contract KEK_Vault is iAuth, IRECEIVE {
+contract KEK_Vault is iAuth, IRECEIVE_KEK {
     
     address payable private _development = payable(0x050134fd4EA6547846EdE4C4Bf46A334B7e87cCD);
     address payable private _community = payable(0x74b9006390BfA657caB68a04501919B72E27f49A);
