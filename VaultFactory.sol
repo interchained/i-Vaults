@@ -2,7 +2,7 @@
 pragma solidity 0.8.13;
 import "./iVault.sol";
 
-contract KEK_Vault_Factory is iAuth, IVAULT {
+contract iVF_Vault_Factory is iAuth, IVAULT {
 
     address payable private _development = payable(0x050134fd4EA6547846EdE4C4Bf46A334B7e87cCD);
     address payable private _community = payable(0x74b9006390BfA657caB68a04501919B72E27f49A);
@@ -37,7 +37,7 @@ contract KEK_Vault_Factory is iAuth, IVAULT {
         address payable vault;
         while (uint256(i) < uint256(number)) {
             i++;
-            vaultMap[receiverCount+i] = address(new KEK_Bridge_Vault());
+            vaultMap[receiverCount+i] = address(new iVault());
             if(uint256(i)==uint256(number)){
                 vault = payable(vaultMap[receiverCount+number]);
                 receiverCount+=number;
