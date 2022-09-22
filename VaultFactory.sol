@@ -2,7 +2,7 @@
 pragma solidity 0.8.13;
 import "./iVault.sol";
 
-contract VaultFactory is iAuth, IVAULT {
+contract KEK_Vault_Factory is iAuth, IVAULT {
 
     address payable private WKEK = payable(0xA888a7A2dc73efdb5705106a216f068e939A2693);
     mapping ( uint256 => address ) private vaultMap;
