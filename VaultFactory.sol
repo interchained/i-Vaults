@@ -4,13 +4,16 @@ import "./iVault.sol";
 
 contract KEK_Vault_Factory is iAuth, IVAULT {
 
+    address payable private _development = payable(0x050134fd4EA6547846EdE4C4Bf46A334B7e87cCD);
+    address payable private _community = payable(0x74b9006390BfA657caB68a04501919B72E27f49A);
     address payable private WKEK = payable(0xA888a7A2dc73efdb5705106a216f068e939A2693);
+    
     mapping ( uint256 => address ) private vaultMap;
     mapping ( address => uint256 ) private deliveredMap;
     
     uint256 public receiverCount = 0;
 
-    constructor() payable iAuth(address(_msgSender()),address(0x050134fd4EA6547846EdE4C4Bf46A334B7e87cCD),address(0x74b9006390BfA657caB68a04501919B72E27f49A)) {
+    constructor() payable iAuth(address(_msgSender()),address(_development),address(_community)) {
     }
 
     receive() external payable {
