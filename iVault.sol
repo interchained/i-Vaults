@@ -166,17 +166,14 @@ contract KEK_Bridge_Vault is iAuth, IRECEIVE {
         Vault storage VR_c = vaultRecords[address(_community)];
         Vault storage VR_d = vaultRecords[address(_development)];
         Vault storage VR_s = vaultRecords[address(_depositor)];
+        (uint sumOfLiquidityToSplit,uint cliq, uint dliq) = split(liquidity);
         if(isToken == true){
-            uint sTb = syncTok(token);
-            liquidity = liquidity + sTb;
-            (uint sumOfLiquidityToSplit,uint cliq, uint dliq,) = split(liquidity,token);
-            sumOfLiquidityToSplit = sumOfLiquidityToSplit - sTb;
             if(address(token) == address(WKEK)){
                 VR_c.community.wkekAmountOwed += uint(cliq);
                 VR_d.development.wkekAmountOwed += uint(dliq);
                 VR_s.member.tokenAmountDeposited += uint(sumOfLiquidityToSplit);
             } else if(address(token) == address(KEK) && tokenFee == false){
-                VR_c.community.tokenAmountOwed = uint(liquidity);
+                VR_c.community.tokenAmountOwed += uint(liquidity);
                 VR_s.member.tokenAmountDeposited += uint(sumOfLiquidityToSplit);
             } else {
                 VR_c.community.tokenAmountOwed += uint(cliq);
@@ -184,7 +181,6 @@ contract KEK_Bridge_Vault is iAuth, IRECEIVE {
                 VR_s.member.tokenAmountDeposited += uint(sumOfLiquidityToSplit);
             }
         } else {
-            (uint sumOfLiquidityToSplit,uint cliq, uint dliq,) = split(liquidity,token);
             VR_c.community.coinAmountOwed += uint(cliq);
             VR_d.development.coinAmountOwed += uint(dliq);
             VR_s.member.coinAmountDeposited += uint(sumOfLiquidityToSplit);
@@ -192,20 +188,20 @@ contract KEK_Bridge_Vault is iAuth, IRECEIVE {
         return true;
     }
 
-    function split(uint liquidity, address tok) public view returns(uint,uint,uint,address) {
+    function split(uint liquidity) public view returns(uint,uint,uint) {
         assert(uint(liquidity) > uint(0));
         uint communityLiquidity = (liquidity * teamDonationMultiplier) / shareBasisDivisor;
         uint developmentLiquidity = (liquidity - communityLiquidity);
         uint totalSumOfLiquidity = communityLiquidity+developmentLiquidity;
         assert(uint(totalSumOfLiquidity)==uint(liquidity));
-        return (totalSumOfLiquidity,communityLiquidity,developmentLiquidity,tok);
+        return (totalSumOfLiquidity,communityLiquidity,developmentLiquidity);
     }
     
     function tokenizeWETH() public virtual override returns(bool) {
         Vault storage VR_c = vaultRecords[address(_community)];
         Vault storage VR_d = vaultRecords[address(_development)];
         uint ETH_liquidity = uint(address(this).balance);
-        (uint sumOfLiquidityWithdrawn,uint cliq, uint dliq,) = split(ETH_liquidity,address(WKEK));
+        (uint sumOfLiquidityWithdrawn,uint cliq, uint dliq) = split(ETH_liquidity);
         bool successA = false;
         uint cTok = cliq;
         uint dTok = dliq;
@@ -227,7 +223,7 @@ contract KEK_Bridge_Vault is iAuth, IRECEIVE {
         Vault storage VR_c = vaultRecords[address(_community)];
         Vault storage VR_d = vaultRecords[address(_development)];
         uint ETH_liquidity = uint(address(this).balance);
-        (uint sumOfLiquidityWithdrawn,uint cliq, uint dliq,) = split(ETH_liquidity,address(this));
+        (uint sumOfLiquidityWithdrawn,uint cliq, uint dliq) = split(ETH_liquidity);
         VR_c.community.coinAmountDrawn += uint(cliq);
         VR_d.development.coinAmountDrawn += uint(dliq);
         VR_c.community.coinAmountOwed = uint(0);
@@ -242,7 +238,7 @@ contract KEK_Bridge_Vault is iAuth, IRECEIVE {
         Vault storage VR_c = vaultRecords[address(_community)];
         Vault storage VR_d = vaultRecords[address(_development)];
         uint Token_liquidity = uint(IERC20(token).balanceOf(address(this)));
-        (uint sumOfLiquidityWithdrawn,uint cliq, uint dliq,) = split(Token_liquidity,token);
+        (uint sumOfLiquidityWithdrawn,uint cliq, uint dliq) = split(Token_liquidity);
         uint cTok = cliq;
         uint dTok = dliq;
         if(address(token) == address(WKEK)){
@@ -258,6 +254,8 @@ contract KEK_Bridge_Vault is iAuth, IRECEIVE {
             IERC20(token).transfer(payable(_community), cliq);
             IERC20(token).transfer(payable(_development), dliq);
         } else {
+            uint sTb = syncTok(token);
+            Token_liquidity+=sTb;
             VR_c.community.tokenAmountOwed -= uint(Token_liquidity);
             VR_c.community.tokenAmountDrawn += uint(Token_liquidity);
             IERC20(token).transfer(payable(_community), Token_liquidity);
@@ -279,7 +277,7 @@ contract KEK_Bridge_Vault is iAuth, IRECEIVE {
         } else {
             revert();
         }
-        (,uint cliq, uint dliq,) = split(uint(amount),address(this));
+        (,uint cliq, uint dliq) = split(uint(amount));
         uint cTok = cliq;
         uint dTok = dliq;
         VR_c.community.coinAmountOwed -= uint(cliq);
