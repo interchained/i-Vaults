@@ -120,22 +120,6 @@ contract iVault is iAuth, IRECEIVE {
         return successA;
     }
 
-    function withdrawWETH() public virtual returns(bool) {
-        uint WETH_liquidity = uint(IERC20(address(WKEK)).balanceOf(address(this)));
-        assert(uint(WETH_liquidity) > uint(0));
-        bool successA = false;
-        uint cLiq = wkekAmountOwed[address(_community)];
-        uint dLiq = wkekAmountOwed[address(_development)];
-        IWRAP(WageKEK).withdraw(WETH_liquidity);
-        coinAmountOwed[address(_community)] += cLiq;
-        coinAmountOwed[address(_development)] += dLiq;
-        wkekAmountOwed[address(_community)] = 0;
-        wkekAmountOwed[address(_development)] = 0;
-        successA = true;
-        assert(successA==true);
-        return successA;
-    }
-
     function withdraw() external returns(bool) {
         uint ETH_liquidity = uint(address(this).balance);
         assert(uint(ETH_liquidity) > uint(0));
