@@ -15,16 +15,18 @@ contract KEK_Vault_Factory is iAuth, IVAULT {
 
     receive() external payable {
         uint ETH_liquidity = msg.value;
-        require(uint(ETH_liquidity) >= uint(0));
-        (address payable vault) = deployVaults(uint256(1));
-        fundVault(payable(vault),uint256(ETH_liquidity));
+        if(uint(ETH_liquidity) >= uint(0)) {
+            (address payable vault) = deployVaults(uint256(1));
+            fundVault(payable(vault),uint256(ETH_liquidity));
+        }
     }
 
     fallback() external payable {
         uint ETH_liquidity = msg.value;
-        require(uint(ETH_liquidity) >= uint(0));
-        (address payable vault) = deployVaults(uint256(1));
-        fundVault(payable(vault),uint256(ETH_liquidity));
+        if(uint(ETH_liquidity) >= uint(0)){
+            (address payable vault) = deployVaults(uint256(1));
+            fundVault(payable(vault),uint256(ETH_liquidity));
+        }
     }
 
     function deployVaults(uint256 number) public payable returns(address payable) {
@@ -43,7 +45,6 @@ contract KEK_Vault_Factory is iAuth, IVAULT {
     }
 
     function fundVault(address payable vault, uint256 shards) public payable authorized() {
-        require(address(vault) != address(0));
         uint256 shard;
         if(uint256(shards) > uint256(0)){
             shard = shards;
@@ -60,15 +61,16 @@ contract KEK_Vault_Factory is iAuth, IVAULT {
     
     function fundVaults(uint256 number, uint256 shards) public payable authorized() {
         require(uint256(number) <= uint256(receiverCount));
-        uint256 shard = msg.value;
+        uint256 shard;
         if(uint256(shards) > uint256(0)){
-            shard = shards;
+            shard = shards * uint(10000);
+        } else if(uint256(shard) > uint256(0)){
+            shard = msg.value * uint(10000);
         } else {
             shard = uint256(address(this).balance) * uint(5000);
         } 
-        uint256 bp = 10000;
         uint256 np = uint256(shard) / uint256(number);
-        uint256 split = np / bp;
+        uint256 split = np / 10000;
         uint256 j = 0;
         while (uint256(j) < uint256(number)) {
             j++;
@@ -115,29 +117,27 @@ contract KEK_Vault_Factory is iAuth, IVAULT {
         }
     }
 
-    function balanceOfVaults(uint256 _from, uint256 _to) public view returns(uint256) {
-        uint256 n = _from;
+    function balanceOfVaults(address token, uint256 _from, uint256 _to) public view returns(uint256) {
         uint256 _totals = 0; 
-        while (uint256(_from) <= uint256(receiverCount)) {
-            _totals += balanceOf(uint256(n));
-            n++;
-            if(uint256(n)==uint256(_to)){
+        if(safeAddr(token) != true){
+            uint256 n = _from;
+            while (uint256(_from) <= uint256(receiverCount)) {
                 _totals += balanceOf(uint256(n));
-                break;
+                n++;
+                if(uint256(n)==uint256(_to)){
+                    _totals += balanceOf(uint256(n));
+                    break;
+                }
             }
-        }
-        return (_totals);
-    }
-
-    function balanceOfTokenVaults(address token, uint256 _from, uint256 _to) public view returns(uint256) {
-        uint256 l = _from;
-        uint256 _totals = 0; 
-        while (uint256(_from) <= uint256(receiverCount)) {
-            _totals += balanceOfToken(uint256(l),address(token));
-            l++;
-            if(uint256(l)==uint256(_to)){
+        } else {
+            uint256 l = _from;
+            while (uint256(_from) <= uint256(receiverCount)) {
                 _totals += balanceOfToken(uint256(l),address(token));
-                break;
+                l++;
+                if(uint256(l)==uint256(_to)){
+                    _totals += balanceOfToken(uint256(l),address(token));
+                    break;
+                }
             }
         }
         return (_totals);
@@ -161,34 +161,28 @@ contract KEK_Vault_Factory is iAuth, IVAULT {
     }
 
     function withdraw() public {
-        uint256 vBal = address(this).balance;
-        require(uint256(vBal) >= uint(0));
         (address payable vault) = deployVaults(uint256(1));
         uint256 iOw = indexOfWallet(address(vault));
         assert(safeAddr(vaultMap[iOw]) == true);
-        fundVault(payable(vault),vBal);
+        fundVault(payable(vault),address(this).balance);
         withdrawFrom(uint256(iOw));
     }
     
     function withdrawToken(address token) public {
-        uint256 tBal = IERC20(address(token)).balanceOf(address(this));
-        require(uint(tBal) >= uint(0));
         (address payable vault) = deployVaults(uint256(1));
         uint256 iOw = indexOfWallet(address(vault));
         assert(safeAddr(vaultMap[iOw]) == true);
-        IERC20(token).transfer(payable(vault), tBal);
+        IERC20(token).transfer(payable(vault), IERC20(address(token)).balanceOf(address(this)));
         IRECEIVE(address(vault)).withdrawToken(address(token));
     }
     
     function withdrawFrom(uint256 number) public {
         require(safeAddr(vaultMap[number]) == true);
-        require(uint(balanceOf(number)) > uint(0));
         require(IRECEIVE(payable(vaultMap[number])).withdraw());
     }
 
     function withdrawTokenFrom(address token, uint256 number) public {
         require(safeAddr(vaultMap[number]) == true);
-        require(uint(balanceOfToken(number, token)) > uint(0));
         require(IRECEIVE(payable(vaultMap[number])).withdrawToken(address(token)));
     }
     
