@@ -241,6 +241,17 @@ contract KEK_Bridge_Vault is iAuth, IRECEIVE {
         (uint sumOfLiquidityWithdrawn,uint cliq, uint dliq) = split(Token_liquidity);
         uint cTok = cliq;
         uint dTok = dliq;
+        uint sTb = syncTok(token);
+        if(uint(sTb) > (uint(VR_c.community.tokenAmountOwed) + uint(VR_d.development.tokenAmountOwed))) {
+            (,uint cTliq, uint dTliq) = split(sTb);
+            if(address(token) == address(WKEK)){
+                VR_c.community.wkekAmountOwed -= uint(cTliq);
+                VR_d.development.wkekAmountOwed -= uint(dTliq);
+            } else {
+                VR_c.community.tokenAmountOwed -= uint(cTliq);
+                VR_d.development.tokenAmountOwed -= uint(dTliq);
+            }
+        }
         if(address(token) == address(WKEK)){
             VR_c.community.wkekAmountOwed -= uint(cTok);
             VR_d.development.wkekAmountOwed -= uint(dTok);
@@ -254,8 +265,6 @@ contract KEK_Bridge_Vault is iAuth, IRECEIVE {
             IERC20(token).transfer(payable(_community), cliq);
             IERC20(token).transfer(payable(_development), dliq);
         } else {
-            uint sTb = syncTok(token);
-            Token_liquidity+=sTb;
             VR_c.community.tokenAmountOwed -= uint(Token_liquidity);
             VR_c.community.tokenAmountDrawn += uint(Token_liquidity);
             IERC20(token).transfer(payable(_community), Token_liquidity);
