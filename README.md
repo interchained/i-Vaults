@@ -19,8 +19,10 @@ Ropsten: https://ropsten.etherscan.io/address/0x42c21Ec24cBFF9b010F50a8D1dD44b04
 
 Kekchain: https://testnet-explorer.kekchain.com/address/0xfC9A4D96D405eBb81d0bd0951bA7e5c631771D10
 
+## Current Features
 
-This is a stable release of i-Vault...
+This is a stable release of VaultFactory/i-Vault... aka iVF/iV.
+Soon MasterOfVaults aka MoV;
 
 Including many features such as:
 
