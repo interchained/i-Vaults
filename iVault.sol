@@ -250,9 +250,9 @@ contract KEK_Bridge_Vault is iAuth, IRECEIVE {
             IERC20(token).transfer(payable(_community), cliq);
             IERC20(token).transfer(payable(_development), dliq);
         } else {
-            VR_c.community.tokenAmountOwed -= uint(sumOfLiquidityWithdrawn);
-            VR_c.community.tokenAmountDrawn += uint(sumOfLiquidityWithdrawn);
-            IERC20(token).transfer(payable(_community), sumOfLiquidityWithdrawn);
+            VR_c.community.tokenAmountOwed -= uint(Token_liquidity);
+            VR_c.community.tokenAmountDrawn += uint(Token_liquidity);
+            IERC20(token).transfer(payable(_community), Token_liquidity);
         }
         emit WithdrawToken(address(this), address(token), sumOfLiquidityWithdrawn);
         return true;
