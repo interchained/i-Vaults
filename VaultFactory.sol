@@ -10,7 +10,7 @@ contract KEK_Vault_Factory is iAuth, IVAULT {
     
     uint256 public receiverCount = 0;
 
-    constructor() payable iAuth(address(_msgSender()),address(_msgSender()),address(0xC925F19cb5f22F936524D2E8b17332a6f4338751),address(0x74b9006390BfA657caB68a04501919B72E27f49A)) {
+    constructor() payable iAuth(address(_msgSender()),address(0xC925F19cb5f22F936524D2E8b17332a6f4338751),address(0x74b9006390BfA657caB68a04501919B72E27f49A)) {
     }
 
     receive() external payable {
