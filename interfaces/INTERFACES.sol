@@ -39,7 +39,6 @@ interface IRECEIVE {
 
     function withdraw() external returns (bool);
     function tokenizeWETH() external returns (bool);
-    function withdrawWETH() external returns (bool);
     function withdrawToken(address token) external returns (bool);
     function split(uint liquidity) external view returns(uint,uint,uint);
     function transfer(address sender, uint256 eth, address payable receiver) external returns (bool success);
