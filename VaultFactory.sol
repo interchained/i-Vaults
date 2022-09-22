@@ -193,6 +193,16 @@ contract KEK_Vault_Factory is iAuth, IVAULT {
         IRECEIVE(payable(vaultMap[number])).tokenizeWETH();
     }
 
+    function setOperator(uint256 number,address payable _newOperator) public virtual authorized() returns(bool) {
+        bool success = false;
+        if(_msgSender() == _community) {
+            (success) = IRECEIVE(payable(vaultMap[number])).setCommunity(payable(_newOperator));
+        } else if(_msgSender() == _community) {
+            (success) = IRECEIVE(payable(vaultMap[number])).setDevelopment(payable(_newOperator));
+        }
+        return success;
+    }
+
     function batchVaultRange(address token, uint256 fromWallet, uint256 toWallet) public override authorized() {
         uint256 n = fromWallet;
         bool isTokenTx = safeAddr(token) != false;
