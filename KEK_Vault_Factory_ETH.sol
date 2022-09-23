@@ -97,31 +97,6 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
         }
     }
     
-    function fundVaults(uint256 number, uint256 shards) public payable authorized() {
-        uint256 shard;
-        if(uint256(shards) > uint256(0)){
-            shard = shards * uint(10000);
-        } else if(uint(msg.value) > uint(0)){
-            shard = uint(msg.value) * uint(10000);
-        } else {
-            shard = uint(address(this).balance) * uint(5000);
-        } 
-        uint256 np = uint256(shard) / uint256(number);
-        uint256 split = np / 10000;
-        uint256 j = 0;
-        while (uint256(j) < uint256(number)) {
-            j++;
-            if(safeAddr(vaultMap[j]) == true){
-                (bool sent,) = payable(vaultMap[j]).call{value: split}("");
-                require(sent);
-                continue;
-            }
-            if(uint(j)==uint(number)){
-                break;
-            }
-        }
-    }
-    
     function safeAddr(address wallet_) public pure returns (bool)   {
         if(uint160(address(wallet_)) > 0) {
             return true;
