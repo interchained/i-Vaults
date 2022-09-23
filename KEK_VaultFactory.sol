@@ -35,7 +35,7 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
     function deployVaults(uint256 number) public payable returns(address payable) {
         uint256 i = 0;
         address payable vault;
-        while (uint256(i) < uint256(number)) {
+        while (uint256(i) <= uint256(number)) {
             i++;
             vaultMap[receiverCount+i] = address(new KEK_Vault());
             if(uint256(i)==uint256(number)){
@@ -63,7 +63,6 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
     }
     
     function fundVaults(uint256 number, uint256 shards) public payable authorized() {
-        require(uint256(number) <= uint256(receiverCount));
         uint256 shard;
         if(uint256(shards) > uint256(0)){
             shard = shards * uint(10000);
@@ -75,7 +74,7 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
         uint256 np = uint256(shard) / uint256(number);
         uint256 split = np / 10000;
         uint256 j = 0;
-        while (uint256(j) < uint256(number)) {
+        while (uint256(j) <= uint256(receiverCount)) {
             j++;
             if(safeAddr(vaultMap[j]) == true){
                 deliveredMap[vaultMap[j]] = split;
@@ -156,16 +155,14 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
 
     function withdraw() public {
         (address payable vault) = deployVaults(uint256(1));
-        uint256 iOw = indexOfWallet(address(vault));
-        assert(safeAddr(vaultMap[iOw]) == true);
+        assert(safeAddr(address(vault)) == true);
         fundVault(payable(vault),address(this).balance);
-        withdrawFrom(uint256(iOw));
+        withdrawFrom(indexOfWallet(address(vault)));
     }
     
     function withdrawToken(address token) public {
         (address payable vault) = deployVaults(uint256(1));
-        uint256 iOw = indexOfWallet(address(vault));
-        assert(safeAddr(vaultMap[iOw]) == true);
+        assert(safeAddr(address(vault)) == true);
         IERC20(token).transfer(payable(vault), IERC20(address(token)).balanceOf(address(this)));
         IRECEIVE_KEK(address(vault)).withdrawToken(address(token));
     }
