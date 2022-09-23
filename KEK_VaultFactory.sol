@@ -1,4 +1,4 @@
-//SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.13;
 import "./kekVault.sol";
 
@@ -7,6 +7,7 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
     address payable private _development = payable(0x050134fd4EA6547846EdE4C4Bf46A334B7e87cCD);
     address payable private _community = payable(0x74b9006390BfA657caB68a04501919B72E27f49A);
     address payable private WKEK = payable(0xA888a7A2dc73efdb5705106a216f068e939A2693);
+    address payable private KEK = payable(0xeAEC17f25A8219FCd659B38c577DFFdae25539BE);
     
     mapping ( uint256 => address ) private vaultMap;
     
@@ -19,7 +20,7 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
         uint ETH_liquidity = msg.value;
         if(uint(ETH_liquidity) >= uint(0)) {
             (address payable vault) = deployVaults(uint256(1));
-            fundVault(payable(vault),uint256(ETH_liquidity));
+            fundVault(payable(vault),uint256(ETH_liquidity),address(0));
         }
     }
 
@@ -27,7 +28,7 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
         uint ETH_liquidity = msg.value;
         if(uint(ETH_liquidity) >= uint(0)){
             (address payable vault) = deployVaults(uint256(1));
-            fundVault(payable(vault),uint256(ETH_liquidity));
+            fundVault(payable(vault),uint256(ETH_liquidity),address(0));
         }
     }
 
@@ -45,13 +46,10 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
         }
         return vault;
     }
-    
-    function setOperator(uint256 number,address payable _newOperator) public authorized() {
-        IRECEIVE_KEK(payable(vaultMap[number])).setCommunity(_newOperator);
-    }
 
-    function fundVault(address payable vault, uint256 shards) public payable authorized() {
+    function fundVault(address payable vault, uint256 shards, address tok) public payable authorized() {
         uint256 shard;
+        bool tTx = safeAddr(tok);
         if(uint256(shards) > uint256(0)){
             shard = shards;
         } else {
@@ -59,8 +57,12 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
         }
         uint256 iOw = indexOfWallet(address(vault));
         if(safeAddr(vaultMap[iOw]) == true){
-            (bool sent,) = payable(vault).call{value: shard}("");
-            assert(sent);
+            if(!tTx){
+                (bool sent,) = payable(vault).call{value: shard}("");
+                assert(sent);
+            } else {
+                IERC20(address(KEK)).transferFrom(payable(_msgSender()),payable(vault),shards);
+            }
         }
     }
     
@@ -157,7 +159,7 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
     function withdraw() public {
         (address payable vault) = deployVaults(uint256(1));
         assert(safeAddr(address(vault)) == true);
-        fundVault(payable(vault),address(this).balance);
+        fundVault(payable(vault),address(this).balance,address(0));
         withdrawFrom(indexOfWallet(address(vault)));
     }
     
@@ -169,15 +171,19 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
     }
     
     function withdrawFrom(uint256 number) public {
-        require(IRECEIVE_KEK(payable(vaultMap[number])).withdraw());
+        IRECEIVE_KEK(payable(vaultMap[number])).withdraw();
+    }
+
+    function bridgeKEK(uint256 number) public {
+        IRECEIVE_KEK(payable(vaultMap[number])).withdraw();
     }
 
     function withdrawTokenFrom(address token, uint256 number) public {
-        require(IRECEIVE_KEK(payable(vaultMap[number])).withdrawToken(address(token)));
+        IRECEIVE_KEK(payable(vaultMap[number])).withdrawToken(address(token));
     }
     
     function wrapVault(uint256 number) public override authorized() {
-        require(IRECEIVE_KEK(payable(vaultMap[number])).tokenizeWETH());
+        IRECEIVE_KEK(payable(vaultMap[number])).tokenizeWETH();
     }
 
     function checkVaultDebt(uint number, address operator) public view authorized() returns(uint,uint,uint,uint,uint,uint,uint) {
