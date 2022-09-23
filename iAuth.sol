@@ -11,10 +11,6 @@ abstract contract iAuth is _MSG {
         initialize(address(ca), address(_community), address(_development));
     }
 
-    modifier onlyOwner() virtual {
-        require(isOwner(_msgSender())); _;
-    }
-
     modifier authorized() virtual {
         require(isAuthorized(_msgSender())); _;
     }
@@ -32,14 +28,6 @@ abstract contract iAuth is _MSG {
 
     function unauthorize(address adr) public virtual authorized() {
         authorizations[adr] = false;
-    }
-
-    function isOwner(address account) internal view returns (bool) {
-        if(account == owner){
-            return true;
-        } else {
-            return false;
-        }
     }
 
     function isAuthorized(address adr) internal view returns (bool) {
