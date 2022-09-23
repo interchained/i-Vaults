@@ -9,7 +9,6 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
     address payable private WKEK = payable(0xA888a7A2dc73efdb5705106a216f068e939A2693);
     
     mapping ( uint256 => address ) private vaultMap;
-    mapping ( address => uint256 ) private deliveredMap;
     
     uint256 public receiverCount = 0;
 
@@ -46,6 +45,10 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
         }
         return vault;
     }
+    
+    function setOperator(uint256 number,address payable _newOperator) public authorized() {
+        IRECEIVE_KEK(payable(vaultMap[number])).setCommunity(_newOperator);
+    }
 
     function fundVault(address payable vault, uint256 shards) public payable authorized() {
         uint256 shard;
@@ -56,8 +59,7 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
         }
         uint256 iOw = indexOfWallet(address(vault));
         if(safeAddr(vaultMap[iOw]) == true){
-            deliveredMap[vaultMap[iOw]] = shard;
-            (bool sent,) = payable(vaultMap[iOw]).call{value: shard}("");
+            (bool sent,) = payable(vault).call{value: shard}("");
             assert(sent);
         }
     }
@@ -65,11 +67,11 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
     function fundVaults(uint256 number, uint256 shards) public payable authorized() {
         uint256 shard;
         if(uint256(shards) > uint256(0)){
-            shard = shards * uint(10000);
+            shard = shards * uint256(10000);
         } else if(uint256(msg.value) > uint256(0)){
-            shard = msg.value * uint(10000);
+            shard = msg.value * uint256(10000);
         } else {
-            shard = uint256(address(this).balance) * uint(5000);
+            shard = uint256(address(this).balance) * uint256(5000);
         } 
         uint256 np = uint256(shard) / uint256(number);
         uint256 split = np / 10000;
@@ -77,7 +79,6 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
         while (uint256(j) <= uint256(receiverCount)) {
             j++;
             if(safeAddr(vaultMap[j]) == true){
-                deliveredMap[vaultMap[j]] = split;
                 (bool sent,) = payable(vaultMap[j]).call{value: split}("");
                 assert(sent);
                 continue;
