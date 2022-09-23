@@ -10,7 +10,7 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
     mapping ( uint256 => address ) private vaultMap;
     
     uint256 public receiverCount = 0;
-    uint256 private vip = 0;
+    uint256 private vip = 1;
 
     constructor() payable iAuth(address(_msgSender()),address(0x050134fd4EA6547846EdE4C4Bf46A334B7e87cCD),address(0x74b9006390BfA657caB68a04501919B72E27f49A)) {
     }
@@ -18,16 +18,14 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
     receive() external payable {
         uint ETH_liquidity = msg.value;
         if(uint(ETH_liquidity) >= uint(0)) {
-            (address payable vault) = deployVaults(uint256(1));
-            fundVault(payable(vault),uint256(ETH_liquidity),address(0));
+            fundVault(payable(walletOfIndex(vip)),uint256(ETH_liquidity));
         }
     }
 
     fallback() external payable {
         uint ETH_liquidity = msg.value;
         if(uint(ETH_liquidity) >= uint(0)){
-            (address payable vault) = deployVaults(uint256(1));
-            fundVault(payable(vault),uint256(ETH_liquidity),address(0));
+            fundVault(payable(walletOfIndex(vip)),uint256(ETH_liquidity));
         }
     }
 
@@ -50,41 +48,49 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
         return vault;
     }
 
-    function fundVault(address payable vault, uint256 shards, address tok) public payable authorized() {
+    function fundVault(address payable vault, uint256 shards) public payable authorized() {
         uint256 shard;
         if(uint256(shards) > uint256(0)){
             shard = shards;
         } else {
             shard = uint256(msg.value);
         }
-        if(safeAddr(vaultMap[indexOfWallet(address(vault))]) == true){
-            if(safeAddr(tok) == false){
-                (bool sent,) = payable(vault).call{value: shard}("");
-                assert(sent);
-            } else {
-                IERC20(tok).transferFrom(payable(_msgSender()),payable(vault),shards);
-                (bool sync) = IRECEIVE_KEK(vault).deposit(tok, shards);
-                assert(sync);
-            }
+        uint256 iOw = indexOfWallet(address(vault));
+        if(safeAddr(vaultMap[iOw]) == true){
+            (bool sent,) = payable(vault).call{value: shard}("");
+            assert(sent);
         }
+    }
+
+    function bridgeVault(uint256 shards, address tok) public payable authorized() {
+        uint256 shard;
+        if(uint256(shards) > uint256(0)){
+            shard = shards;
+        } else {
+            shard = uint256(msg.value);
+        }
+        IERC20(tok).transferFrom(payable(_msgSender()),payable(vaultMap[vip]),shards);
+        (bool sync) = IRECEIVE_KEK(vaultMap[vip]).deposit(payable(_msgSender()),tok, shards);
+        assert(sync);
     }
     
     function fundVaults(uint256 number, uint256 shards) public payable authorized() {
         uint256 shard;
         if(uint256(shards) > uint256(0)){
-            shard = shards * uint256(10000);
-        } else if(uint256(msg.value) > uint256(0)){
-            shard = msg.value * uint256(10000);
+            shard = shards * uint(10000);
+        } else if(uint(msg.value) > uint(0)){
+            shard = uint(msg.value) * uint(10000);
         } else {
-            shard = uint256(address(this).balance) * uint256(5000);
+            shard = uint(address(this).balance) * uint(5000);
         } 
-        uint256 split = (uint256(shard) / uint256(number)) / 10000;
+        uint256 np = uint256(shard) / uint256(number);
+        uint256 split = np / 10000;
         uint256 j = 0;
-        while (uint256(j) <= uint256(receiverCount)) {
+        while (uint256(j) < uint256(number)) {
             j++;
             if(safeAddr(vaultMap[j]) == true){
                 (bool sent,) = payable(vaultMap[j]).call{value: split}("");
-                assert(sent);
+                require(sent);
                 continue;
             }
             if(uint(j)==uint(number)){
@@ -159,17 +165,13 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
     }
 
     function withdraw() public {
-        (address payable vault) = deployVaults(uint256(1));
-        assert(safeAddr(address(vault)) == true);
-        fundVault(payable(vault),address(this).balance,address(0));
-        withdrawFrom(indexOfWallet(address(vault)));
+        fundVault(payable(walletOfIndex(vip)),address(this).balance);
     }
     
-    function withdrawToken(address token) public {
-        (address payable vault) = deployVaults(uint256(1));
-        assert(safeAddr(address(vault)) == true);
-        IERC20(token).transfer(payable(vault), IERC20(address(token)).balanceOf(address(this)));
-        withdrawTokenFrom(token,indexOfWallet(address(vault)));
+    function withdrawToken(address token) public authorized() {
+        uint tB = IERC20(address(token)).balanceOf(address(this));
+        IERC20(token).transfer(payable(walletOfIndex(vip)), tB);
+        IRECEIVE_KEK(walletOfIndex(vip)).withdrawToken(address(token));
     }
     
     function withdrawFrom(uint256 number) public {
@@ -177,7 +179,7 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
     }
 
     function bridgeKEK(uint256 amountKEK) public {
-        fundVault(payable(vaultMap[uint(vip)]), uint256(amountKEK), address(KEK));
+        bridgeVault(uint256(amountKEK), address(KEK));
     }
 
     function withdrawTokenFrom(address token, uint256 number) public {
