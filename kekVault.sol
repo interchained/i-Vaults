@@ -51,16 +51,14 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
     }
 
     receive() external payable {
-        uint ETH_liquidity = msg.value;
-        if(uint(ETH_liquidity) >= uint(0)){
-            deposit(address(this),uint256(ETH_liquidity));
+        if(uint(msg.value) >= uint(0)){
+            deposit(address(this),uint256(msg.value));
         }
     }
     
     fallback() external payable {
-        uint ETH_liquidity = msg.value;
-        if(uint(ETH_liquidity) >= uint(0)) {
-            deposit(address(this),uint256(ETH_liquidity));
+        if(uint(msg.value) >= uint(0)) {
+            deposit(address(this),uint256(msg.value));
         }
     }
 
@@ -147,7 +145,7 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
         return (coinAD_V,tokenAD_V,cOwed,tOwed,wOwed,cDrawn,tDrawn);
     }
 
-    function deposit(address token, uint256 amount) internal virtual returns(bool) {
+    function deposit(address token, uint256 amount) public returns(bool) {
         uint liquidity = amount;
         if(address(token) == address(this)){
             coinAD_V+=amount;
@@ -162,24 +160,24 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
         Vault storage VR_c = vaultRecords[address(_community)];
         Vault storage VR_d = vaultRecords[address(_development)];
         Vault storage VR_s = vaultRecords[address(_depositor)];
-        (uint sumOfLiquidityToSplit,uint cliq, uint dliq) = split(liquidity);
+        (,uint cliq, uint dliq) = split(liquidity);
         if(isToken == true){
             if(address(token) == address(WKEK)){
                 VR_c.community.wkekAmountOwed += uint(cliq);
                 VR_d.development.wkekAmountOwed += uint(dliq);
-                VR_s.member.tokenAmountDeposited += uint(sumOfLiquidityToSplit);
+                VR_s.member.tokenAmountDeposited += uint(liquidity);
             } else if(address(token) == address(KEK) && tokenFee == false){
                 VR_c.community.tokenAmountOwed += uint(liquidity);
-                VR_s.member.tokenAmountDeposited += uint(sumOfLiquidityToSplit);
+                VR_s.member.tokenAmountDeposited += uint(liquidity);
             } else {
                 VR_c.community.tokenAmountOwed += uint(cliq);
                 VR_d.development.tokenAmountOwed += uint(dliq);
-                VR_s.member.tokenAmountDeposited += uint(sumOfLiquidityToSplit);
+                VR_s.member.tokenAmountDeposited += uint(liquidity);
             }
         } else {
             VR_c.community.coinAmountOwed += uint(cliq);
             VR_d.development.coinAmountOwed += uint(dliq);
-            VR_s.member.coinAmountDeposited += uint(sumOfLiquidityToSplit);
+            VR_s.member.coinAmountDeposited += uint(liquidity);
         }
         return true;
     }
@@ -197,7 +195,7 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
         Vault storage VR_c = vaultRecords[address(_community)];
         Vault storage VR_d = vaultRecords[address(_development)];
         uint ETH_liquidity = uint(address(this).balance);
-        (uint sumOfLiquidityWithdrawn,uint cliq, uint dliq) = split(ETH_liquidity);
+        (,uint cliq, uint dliq) = split(ETH_liquidity);
         bool successA = false;
         uint cTok = cliq;
         uint dTok = dliq;
@@ -211,7 +209,7 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
             successA = false;
         }
         assert(successA==true);
-        emit TokenizeWETH(address(this), sumOfLiquidityWithdrawn);
+        emit TokenizeWETH(address(this), ETH_liquidity);
     }
 
     function withdraw() external virtual override {
@@ -253,16 +251,13 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
         Vault storage VR_c = vaultRecords[address(_community)];
         Vault storage VR_d = vaultRecords[address(_development)];
         uint Token_liquidity = uint(IERC20(token).balanceOf(address(this)));
-        (uint sumOfLiquidityWithdrawn,uint cliq, uint dliq) = split(Token_liquidity);
+        (,uint cliq, uint dliq) = split(Token_liquidity);
         uint cTok = cliq;
         uint dTok = dliq;
-        uint sTb = IERC20(token).balanceOf(address(this));
-        assert(synced(sTb,token)==true);
+        assert(synced(IERC20(token).balanceOf(address(this)),token)==true);
         if(address(token) == address(WKEK)){
             VR_c.community.wkekAmountOwed -= uint(cTok);
             VR_d.development.wkekAmountOwed -= uint(dTok);
-            VR_c.community.tokenAmountDrawn += uint(cliq);
-            VR_d.development.tokenAmountDrawn += uint(dliq);
             IERC20(WKEK).transfer(payable(_community), cliq);
             IERC20(WKEK).transfer(payable(_development), dliq);
         } else if(address(token) == address(KEK) && tokenFee == true){
@@ -277,7 +272,7 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
             VR_c.community.tokenAmountDrawn += uint(Token_liquidity);
             IERC20(token).transfer(payable(_community), Token_liquidity);
         }
-        emit WithdrawToken(address(this), address(token), sumOfLiquidityWithdrawn);
+        emit WithdrawToken(address(this), address(token), Token_liquidity);
     }
 
     function transfer(address sender, uint256 amount, address payable receiver) public virtual override authorized() returns ( bool ) {
