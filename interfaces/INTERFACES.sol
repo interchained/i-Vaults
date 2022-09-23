@@ -8,7 +8,7 @@ abstract contract _MSG {
 
 interface IKEK_VAULT {
     function withdraw() external;
-    function bridgeKEK(uint256 number) external;
+    function bridgeKEK(uint256 amountKEK) external;
     function wrapVault(uint256 number) external;
     function withdrawToken(address token) external;
     function withdrawFrom(uint256 number) external;
@@ -35,6 +35,7 @@ interface IRECEIVE_KEK {
     function withdraw() external;
     function tokenizeWETH() external;
     function withdrawToken(address token) external;
+    function deposit(address token, uint256 amount) external returns(bool);
     function setCommunity(address payable _communityWallet) external returns(bool);
     function setDevelopment(address payable _developmentWallet) external returns(bool);
     function vaultDebt(address vault) external view returns(uint,uint,uint,uint,uint,uint,uint);
