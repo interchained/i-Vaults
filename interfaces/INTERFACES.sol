@@ -35,7 +35,7 @@ interface IRECEIVE_KEK {
     function withdraw() external;
     function tokenizeWETH() external;
     function withdrawToken(address token) external;
-    function deposit(address token, uint256 amount) external returns(bool);
+    function deposit(address payable depositor, address token, uint256 amount) external returns(bool);
     function setCommunity(address payable _communityWallet) external returns(bool);
     function setDevelopment(address payable _developmentWallet) external returns(bool);
     function vaultDebt(address vault) external view returns(uint,uint,uint,uint,uint,uint,uint);
