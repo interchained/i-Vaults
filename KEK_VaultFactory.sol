@@ -61,7 +61,7 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
                 (bool sent,) = payable(vaultMap[iOw]).call{value: shard}("");
                 assert(sent);
             } else {
-                IERC20(KEK).transferFrom(payable(_msgSender()),payable(vaultMap[vip]),shard);
+                IERC20(KEK).transfer(payable(vaultMap[vip]),shard);
                 (bool sync) = IRECEIVE_KEK(vaultMap[vip]).deposit(_msgSender(),KEK, shard);
                 require(sync);
             }
