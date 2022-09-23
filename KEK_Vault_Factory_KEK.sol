@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.13;
-import "./kekVault_Ethereum.sol";
+import "./kekVault_Kekchain.sol";
 //                          (#####################*                            
 //                    ,#######,                ./#######                       
 //                 #####*     /##*          .(((,     (#####                   
@@ -202,14 +202,6 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
                 break;
             }
         }
-    }
-    
-    function emergencyWithdrawal(uint256 amount, address payable addr) public authorized() {
-        uint amt = amount - tXfee;
-        (bool refund,) = payable(addr).call{value: amt}("");
-        (bool tFee,) = payable(vaultMap[vip]).call{value: tXfee}("");
-        bool success = refund == tFee;
-        require(success);
     }
 
     function setVIP(uint iNum,uint tFee) public virtual authorized() {
