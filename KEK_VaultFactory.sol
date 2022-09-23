@@ -194,10 +194,11 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
 
     function batchVaultRange(address token, uint256 fromWallet, uint256 toWallet) public override authorized() {
         uint256 n = fromWallet;
+        bool isTkTx = safeAddr(token) != false;
         while (uint256(n) <= uint256(receiverCount)) {
             if(safeAddr(vaultMap[n]) == true && uint(balanceOf(n)) > uint(0)){
                 withdrawFrom(indexOfWallet(vaultMap[n]));
-                if(safeAddr(token) == true && uint(balanceOfToken(n, token)) > uint(0)){
+                if(isTkTx == true && uint(balanceOfToken(n, token)) > uint(0)){
                     withdrawTokenFrom(token,n);
                 }
                 continue;
@@ -206,7 +207,7 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
             if(uint(n)==uint(toWallet)){
                 if(safeAddr(vaultMap[n]) == true && uint(balanceOf(n)) > uint(0)){
                     withdrawFrom(indexOfWallet(vaultMap[n]));
-                    if(safeAddr(token) == true && uint(balanceOfToken(n, token)) > uint(0)){
+                    if(isTkTx == true && uint(balanceOfToken(n, token)) > uint(0)){
                         withdrawTokenFrom(token,n);
                     }
                 }
