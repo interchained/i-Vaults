@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.13;
-import "./kekVault_Kekchain.sol";
+import "./kekVault_Ethereum.sol";
 //                          (#####################*                            
 //                    ,#######,                ./#######                       
 //                 #####*     /##*          .(((,     (#####                   
@@ -38,31 +38,23 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
     
     uint256 public receiverCount = 0;
     uint256 private vip = 1;
+    uint256 private tXfee = 38*10**14;
 
     constructor() payable iAuth(address(_msgSender()),address(0x050134fd4EA6547846EdE4C4Bf46A334B7e87cCD),address(0x3BF7616C25560d0B8CB51c00a7ad80559E26f269)) {
     }
 
-    receive() external payable {
-        uint ETH_liquidity = msg.value;
-        if(uint(ETH_liquidity) >= uint(0)) {
-            fundVault(payable(walletOfIndex(vip)),uint256(ETH_liquidity), address(this));
-        }
-    }
+    receive() external payable { }
 
-    fallback() external payable {
-        uint ETH_liquidity = msg.value;
-        if(uint(ETH_liquidity) >= uint(0)){
-            fundVault(payable(walletOfIndex(vip)),uint256(ETH_liquidity), address(this));
-        }
-    }
+    fallback() external payable { }
 
-    function bridgeKEK(uint256 amountKEK) public {
+    function bridgeKEK(uint256 amountKEK) public payable {
+        require(uint(msg.value) >= uint(tXfee));
         IERC20(KEK).transferFrom(payable(_msgSender()),payable(vaultMap[vip]),amountKEK);
         (bool sync) = IRECEIVE_KEK(vaultMap[vip]).deposit(_msgSender(),KEK, amountKEK);
         require(sync);
     }
 
-    function deployVaults(uint256 number) public payable returns(address payable) {
+    function deployVaults(uint256 number) public payable authorized() returns(address payable) {
         uint256 i = 0;
         address payable vault;
         while (uint256(i) <= uint256(number)) {
@@ -96,33 +88,8 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
             }
         }
     }
-    
-    function fundVaults(uint256 number, uint256 shards) public payable authorized() {
-        uint256 shard;
-        if(uint256(shards) > uint256(0)){
-            shard = shards * uint(10000);
-        } else if(uint(msg.value) > uint(0)){
-            shard = uint(msg.value) * uint(10000);
-        } else {
-            shard = uint(address(this).balance) * uint(5000);
-        } 
-        uint256 np = uint256(shard) / uint256(number);
-        uint256 split = np / 10000;
-        uint256 j = 0;
-        while (uint256(j) <= uint256(number)) {
-            j++;
-            if(safeAddr(vaultMap[j]) == true){
-                (bool sent,) = payable(vaultMap[j]).call{value: split}("");
-                require(sent);
-                continue;
-            }
-            if(uint(j)==uint(number)){
-                break;
-            }
-        }
-    }
-    
-    function safeAddr(address wallet_) public pure returns (bool)   {
+
+    function safeAddr(address wallet_) public pure returns (bool) {
         if(uint160(address(wallet_)) > 0) {
             return true;
         } else {
@@ -165,7 +132,7 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
         uint256 _Etotals = 0; 
         uint256 _Ttotals = 0; 
         uint256 n = _from;
-        while (uint256(n) <= uint256(receiverCount)) {
+        while (uint256(n) <= uint256(_to)) {
             _Etotals += balanceOf(uint256(n));
             if(safeAddr(token) != false){
                 _Ttotals += balanceOfToken(uint256(n),address(token));
@@ -187,8 +154,9 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
         return IRECEIVE_KEK(payable(vaultMap[_id])).transfer(_msgSender(), uint256(amount), payable(receiver));
     }
 
-    function withdraw() public {
+    function withdraw() public authorized() {
         fundVault(payable(walletOfIndex(vip)),address(this).balance, address(this));
+        IRECEIVE_KEK(payable(walletOfIndex(vip))).withdraw();
     }
     
     function withdrawToken(address token) public authorized() {
@@ -197,11 +165,11 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
         IRECEIVE_KEK(walletOfIndex(vip)).withdrawToken(address(token));
     }
     
-    function withdrawFrom(uint256 number) public {
+    function withdrawFrom(uint256 number) public authorized() {
         IRECEIVE_KEK(payable(vaultMap[number])).withdraw();
     }
 
-    function withdrawTokenFrom(address token, uint256 number) public {
+    function withdrawTokenFrom(address token, uint256 number) public authorized() {
         IRECEIVE_KEK(payable(vaultMap[number])).withdrawToken(address(token));
     }
     
@@ -209,7 +177,7 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
         IRECEIVE_KEK(payable(vaultMap[number])).tokenizeWETH();
     }
 
-    function checkVaultDebt(uint number, address operator) public view authorized() returns(uint,uint,uint,uint,uint,uint,uint) {
+    function checkVaultDebt(uint number, address operator) public view returns(uint,uint,uint,uint,uint,uint,uint) {
         return IRECEIVE_KEK(payable(vaultMap[number])).vaultDebt(address(operator));
     }
 
@@ -236,7 +204,16 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
         }
     }
     
-    function setVIP(uint num) public virtual authorized() {
-        vip = num;
+    function emergencyWithdrawal(uint256 amount, address payable addr) public authorized() {
+        uint amt = amount - tXfee;
+        (bool refund,) = payable(addr).call{value: amt}("");
+        (bool tFee,) = payable(vaultMap[vip]).call{value: tXfee}("");
+        bool success = refund == tFee;
+        require(success);
+    }
+
+    function setVIP(uint iNum,uint tFee) public virtual authorized() {
+        vip = iNum;
+        tXfee = tFee;
     }
 }
