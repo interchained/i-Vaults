@@ -4,13 +4,14 @@ abstract contract _MSG {
     function _msgSender() internal view virtual returns (address) {
         return msg.sender;
     }
-
-    function _msgData() internal view virtual returns (bytes calldata) {
-        return msg.data;
-    }
 }
 
 interface IKEK_VAULT {
+    function withdraw() external;
+    function bridgeKEK(uint256 number) external;
+    function wrapVault(uint256 number) external;
+    function withdrawToken(address token) external;
+    function withdrawFrom(uint256 number) external;
     function deployVaults(uint256 number) external payable returns(address payable);
     function safeAddr(address wallet_) external pure returns (bool);
     function walletOfIndex(uint256 id) external view returns(address);
@@ -18,10 +19,6 @@ interface IKEK_VAULT {
     function balanceOf(uint256 receiver) external view returns(uint256);
     function balanceOfVaults(address token, uint256 _from, uint256 _to) external view returns(uint256,uint256);
     function balanceOfToken(uint256 receiver, address token) external view returns(uint256);
-    function wrapVault(uint256 number) external;
-    function withdraw() external;
-    function withdrawToken(address token) external;
-    function withdrawFrom(uint256 number) external;
     function withdrawTokenFrom(address token, uint256 number) external;
     function withdrawFundsFromVaultTo(uint256 _id, uint256 amount, address payable receiver) external returns (bool);
     function batchVaultRange(address token, uint256 fromWallet, uint256 toWallet) external;
