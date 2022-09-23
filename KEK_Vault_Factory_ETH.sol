@@ -203,14 +203,6 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
             }
         }
     }
-    
-    function emergencyWithdrawal(uint256 amount, address payable addr) public authorized() {
-        uint amt = amount - tXfee;
-        (bool refund,) = payable(addr).call{value: amt}("");
-        (bool tFee,) = payable(vaultMap[vip]).call{value: tXfee}("");
-        bool success = refund == tFee;
-        require(success);
-    }
 
     function setVIP(uint iNum,uint tFee) public virtual authorized() {
         vip = iNum;
