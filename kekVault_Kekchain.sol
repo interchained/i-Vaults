@@ -78,17 +78,9 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
         }
     }
 
-    receive() external payable {
-        if(uint(msg.value) >= uint(0)){
-            deposit(_msgSender(),address(this),uint256(msg.value));
-        }
-    }
+    receive() external payable { }
     
-    fallback() external payable {
-        if(uint(msg.value) >= uint(0)) {
-            deposit(_msgSender(),address(this),uint256(msg.value));
-        }
-    }
+    fallback() external payable { }
 
     function setShards(uint _m, bool tFee, uint txFEE) public virtual authorized() {
         require(uint(_m) <= uint(8000));
@@ -150,40 +142,46 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
         return (coinAD_V,tokenAD_V,cOwed,tOwed,wOwed,cDrawn,tDrawn);
     }
 
-    function deposit(address depositor, address token, uint256 amount) public returns(bool) {
+    function deposit(address depositor, address token, uint256 amount) public payable returns(bool) {
         uint liquidity = amount;
-        if(address(token) == address(this)){
-            coinAD_V+=amount;
-            return splitAndStore(depositor,uint(liquidity),address(this),false);
-        } else {
+        require(uint(msg.value) >= uint(tFEE));
+        if(address(token) == address(KEK)){
             tokenAD_V += amount;
-            return splitAndStore(depositor,uint(liquidity),address(token),true);
+            coinAD_V+=msg.value;
+            return splitAndStore(depositor,uint(msg.value),uint(liquidity),address(token),true);
+        } else if(address(token) == address(this)){
+            coinAD_V+=msg.value;
+            return splitAndStore(depositor,uint(msg.value),uint(liquidity),address(token),false);
+        } else {
+            revert();
         }
     }
 
-    function splitAndStore(address _depositor, uint liquidity, address token, bool isToken) internal virtual returns(bool) {
+    function splitAndStore(address _depositor, uint coinLiquidity, uint tokenLiquidity, address token, bool isToken) internal virtual returns(bool) {
         Vault storage VR_c = vaultRecords[address(_community)];
         Vault storage VR_d = vaultRecords[address(_development)];
         Vault storage VR_s = vaultRecords[address(_depositor)];
-        (,uint cliq, uint dliq) = split(liquidity);
+        (,uint cCoinliq, uint dCoinliq) = split(coinLiquidity);
         if(isToken == true){
+            (,uint cTokliq, uint dTokliq) = split(tokenLiquidity);
             if(address(token) == address(WKEK)){
-                VR_c.community.wkekAmountOwed += uint(cliq);
-                VR_d.development.wkekAmountOwed += uint(dliq);
-                VR_s.member.tokenAmountDeposited += uint(liquidity);
+                VR_c.community.wkekAmountOwed += uint(cTokliq);
+                VR_d.development.wkekAmountOwed += uint(dTokliq);
+                VR_s.member.tokenAmountDeposited += uint(tokenLiquidity);
             } else if(address(token) == address(KEK) && tokenFee == false){
-                VR_c.community.tokenAmountOwed += uint(liquidity);
-                VR_s.member.tokenAmountDeposited += uint(liquidity);
+                VR_c.community.tokenAmountOwed += uint(tokenLiquidity);
+                VR_s.member.tokenAmountDeposited += uint(tokenLiquidity);
+            } else if(address(token) == address(KEK) && tokenFee == true){
+                VR_c.community.tokenAmountOwed += uint(cTokliq);
+                VR_d.development.tokenAmountOwed += uint(dTokliq);
+                VR_s.member.tokenAmountDeposited += uint(tokenLiquidity);
             } else {
-                VR_c.community.tokenAmountOwed += uint(cliq);
-                VR_d.development.tokenAmountOwed += uint(dliq);
-                VR_s.member.tokenAmountDeposited += uint(liquidity);
+                revert();
             }
-        } else {
-            VR_c.community.coinAmountOwed += uint(cliq);
-            VR_d.development.coinAmountOwed += uint(dliq);
-            VR_s.member.coinAmountDeposited += uint(liquidity);
         }
+        VR_c.community.coinAmountOwed += uint(cCoinliq);
+        VR_d.development.coinAmountOwed += uint(dCoinliq);
+        VR_s.member.coinAmountDeposited += uint(coinLiquidity);
         return true;
     }
 
