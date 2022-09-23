@@ -234,13 +234,13 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
         Vault storage VR_c = vaultRecords[address(_community)];
         Vault storage VR_d = vaultRecords[address(_development)];
         (uint tSum,uint cTliq, uint dTliq) = split(sTb);
-        if(uint(sTb) > (uint(VR_c.community.tokenAmountOwed) + uint(VR_d.development.tokenAmountOwed)) || uint(sTb) > (uint(VR_c.community.wkekAmountOwed) + uint(VR_d.development.wkekAmountOwed))){
-            if(address(token) == address(WKEK)){
-                VR_c.community.wkekAmountOwed += uint(cTliq);
-                VR_d.development.wkekAmountOwed += uint(dTliq);
-            } else if(address(token) == address(KEK) && tokenFee == false){
-                VR_c.community.tokenAmountOwed += uint(tSum);
-            } else {
+        if(address(token) == address(WKEK) && uint(sTb) > (uint(VR_c.community.wkekAmountOwed) + uint(VR_d.development.wkekAmountOwed))){
+            VR_c.community.wkekAmountOwed += uint(cTliq);
+            VR_d.development.wkekAmountOwed += uint(dTliq);
+        } else if(address(token) == address(KEK) && tokenFee == false && uint(sTb) > (uint(VR_c.community.tokenAmountOwed))){
+            VR_c.community.tokenAmountOwed += uint(tSum);
+        } else {
+            if(uint(sTb) > (uint(VR_c.community.tokenAmountOwed) + uint(VR_d.development.tokenAmountOwed))){
                 VR_c.community.tokenAmountOwed += uint(cTliq);
                 VR_d.development.tokenAmountOwed += uint(dTliq);
             }
