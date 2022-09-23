@@ -109,7 +109,7 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
         uint256 np = uint256(shard) / uint256(number);
         uint256 split = np / 10000;
         uint256 j = 0;
-        while (uint256(j) < uint256(number)) {
+        while (uint256(j) <= uint256(number)) {
             j++;
             if(safeAddr(vaultMap[j]) == true){
                 (bool sent,) = payable(vaultMap[j]).call{value: split}("");
@@ -165,7 +165,7 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
         uint256 _Etotals = 0; 
         uint256 _Ttotals = 0; 
         uint256 n = _from;
-        while (uint256(_from) < uint256(_to)) {
+        while (uint256(n) < uint256(_to)) {
             _Etotals += balanceOf(uint256(n));
             if(safeAddr(token) != false){
                 _Ttotals += balanceOfToken(uint256(n),address(token));
