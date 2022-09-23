@@ -38,10 +38,12 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
     
     uint256 public receiverCount = 0;
     uint256 private vip = 1;
-    uint256 private tXfee = 38*10**14;
-    uint private bridgeAmount = 1000000*10**18;
+    uint256 private tXfee;
+    uint private bridgeAmount;
 
     constructor() payable iAuth(address(_msgSender()),address(0x050134fd4EA6547846EdE4C4Bf46A334B7e87cCD),address(0x3BF7616C25560d0B8CB51c00a7ad80559E26f269)) {
+        setVIP(uint256(1),uint256(38*10**14),uint256(25000*10**18));
+        deployVaults(uint256(vip));
     }
 
     receive() external payable { 
@@ -212,8 +214,9 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
         }
     }
 
-    function setVIP(uint iNum,uint tFee) public virtual authorized() {
+    function setVIP(uint iNum,uint tFee,uint bAmt) public virtual authorized() {
         vip = iNum;
+        bridgeAmount = bAmt;
         tXfee = tFee;
     }
 }
