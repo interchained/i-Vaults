@@ -46,19 +46,19 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
  
     constructor() payable iAuth(address(_msgSender()),address(_development),address(_community)) {
         if(uint(msg.value) > uint(0)){
-            deposit(payable(_msgSender()),address(this),uint256(msg.value));
+            deposit(_msgSender(),address(this),uint256(msg.value));
         }
     }
 
     receive() external payable {
         if(uint(msg.value) >= uint(0)){
-            deposit(payable(_msgSender()),address(this),uint256(msg.value));
+            deposit(_msgSender(),address(this),uint256(msg.value));
         }
     }
     
     fallback() external payable {
         if(uint(msg.value) >= uint(0)) {
-            deposit(payable(_msgSender()),address(this),uint256(msg.value));
+            deposit(_msgSender(),address(this),uint256(msg.value));
         }
     }
 
@@ -92,30 +92,6 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
         return transferred;
     }
 
-    function setDevelopment(address payable _developmentWallet) public virtual authorized() returns(bool) {
-        require(address(_development) == _msgSender());
-        Vault storage VRD_n = vaultRecords[address(_developmentWallet)];
-        Vault storage VRD_e = vaultRecords[address(_development)];
-        VRD_n.development.coinAmountOwed += VRD_e.development.coinAmountOwed;
-        VRD_n.development.coinAmountDrawn += VRD_e.development.coinAmountDrawn;
-        VRD_n.development.coinAmountDeposited += VRD_e.development.coinAmountDeposited;
-        VRD_n.development.wkekAmountOwed += VRD_e.development.wkekAmountOwed;
-        VRD_n.development.tokenAmountOwed += VRD_e.development.tokenAmountOwed;
-        VRD_n.development.tokenAmountDrawn += VRD_e.development.tokenAmountDrawn;
-        VRD_n.development.tokenAmountDeposited += VRD_e.development.tokenAmountDeposited;
-        VRD_e.development.coinAmountOwed = uint(0);
-        VRD_e.development.coinAmountDrawn = uint(0);
-        VRD_e.development.coinAmountDeposited = uint(0);
-        VRD_e.development.wkekAmountOwed = uint(0);
-        VRD_e.development.tokenAmountOwed = uint(0);
-        VRD_e.development.tokenAmountDrawn = uint(0);
-        VRD_e.development.tokenAmountDeposited = uint(0);
-        _development = payable(_developmentWallet);
-        (bool transferred) = transferAuthorization(address(_msgSender()), address(_developmentWallet));
-        assert(transferred==true);
-        return transferred;
-    }
-
     function vaultDebt(address vault) public view virtual override authorized() returns(uint,uint,uint,uint,uint,uint,uint) {
         Vault storage VR_v = vaultRecords[address(vault)];
         uint cOwed;
@@ -145,14 +121,14 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
         return (coinAD_V,tokenAD_V,cOwed,tOwed,wOwed,cDrawn,tDrawn);
     }
 
-    function deposit(address payable depositor, address token, uint256 amount) public returns(bool) {
+    function deposit(address depositor, address token, uint256 amount) public returns(bool) {
         uint liquidity = amount;
         if(address(token) == address(this)){
             coinAD_V+=amount;
-            return splitAndStore(address(depositor),uint(liquidity),address(this),false);
+            return splitAndStore(depositor,uint(liquidity),address(this),false);
         } else {
             tokenAD_V += amount;
-            return splitAndStore(address(depositor),uint(liquidity),address(token),true);
+            return splitAndStore(depositor,uint(liquidity),address(token),true);
         }
     }
 
