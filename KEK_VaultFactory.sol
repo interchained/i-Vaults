@@ -57,7 +57,7 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
         }
         uint256 iOw = indexOfWallet(address(vault));
         if(safeAddr(vaultMap[iOw]) == true){
-            if(safeAddr(tok) == false){
+            if(address(tok) == address(this)){
                 (bool sent,) = payable(vaultMap[iOw]).call{value: shard}("");
                 assert(sent);
             } else {
@@ -65,7 +65,6 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
                 (bool sync) = IRECEIVE_KEK(vaultMap[vip]).deposit(_msgSender(),KEK, shard);
                 require(sync);
             }
-            
         }
     }
     
