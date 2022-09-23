@@ -135,17 +135,20 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
     function balanceOfVaults(address token, uint256 _from, uint256 _to) public view returns(uint256,uint256) {
         uint256 _Etotals = 0; 
         uint256 _Ttotals = 0; 
-        if(safeAddr(token) != true){
-            uint256 n = _from;
-            while (uint256(_from) <= uint256(receiverCount)) {
+        uint256 n = _from;
+        while (uint256(_from) <= uint256(receiverCount)) {
+            _Etotals += balanceOf(uint256(n));
+            if(safeAddr(token) != false){
                 _Ttotals += balanceOfToken(uint256(n),address(token));
+                continue;
+            }
+            n++;
+            if(uint256(n)==uint256(_to)){
                 _Etotals += balanceOf(uint256(n));
-                n++;
-                if(uint256(n)==uint256(_to)){
+                if(safeAddr(token) != false){
                     _Ttotals += balanceOfToken(uint256(n),address(token));
-                    _Etotals += balanceOf(uint256(n));
-                    break;
                 }
+                break;
             }
         }
         return (_Etotals,_Ttotals);
