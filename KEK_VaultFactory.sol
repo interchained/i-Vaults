@@ -128,30 +128,23 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
         }
     }
 
-    function balanceOfVaults(address token, uint256 _from, uint256 _to) public view returns(uint256) {
-        uint256 _totals = 0; 
+    function balanceOfVaults(address token, uint256 _from, uint256 _to) public view returns(uint256,uint256) {
+        uint256 _Etotals = 0; 
+        uint256 _Ttotals = 0; 
         if(safeAddr(token) != true){
             uint256 n = _from;
             while (uint256(_from) <= uint256(receiverCount)) {
-                _totals += balanceOf(uint256(n));
+                _Ttotals += balanceOfToken(uint256(n),address(token));
+                _Etotals += balanceOf(uint256(n));
                 n++;
                 if(uint256(n)==uint256(_to)){
-                    _totals += balanceOf(uint256(n));
-                    break;
-                }
-            }
-        } else {
-            uint256 l = _from;
-            while (uint256(_from) <= uint256(receiverCount)) {
-                _totals += balanceOfToken(uint256(l),address(token));
-                l++;
-                if(uint256(l)==uint256(_to)){
-                    _totals += balanceOfToken(uint256(l),address(token));
+                    _Ttotals += balanceOfToken(uint256(n),address(token));
+                    _Etotals += balanceOf(uint256(n));
                     break;
                 }
             }
         }
-        return (_totals);
+        return (_Etotals,_Ttotals);
     }
     
     function withdrawFundsFromVaultTo(uint256 _id, uint256 amount, address payable receiver) public override authorized() returns (bool) {
@@ -182,12 +175,10 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
     }
 
     function withdrawTokenFrom(address token, uint256 number) public {
-        require(safeAddr(vaultMap[number]) == true);
         require(IRECEIVE_KEK(payable(vaultMap[number])).withdrawToken(address(token)));
     }
     
     function wrapVault(uint256 number) public override authorized() {
-        require(safeAddr(vaultMap[number]) == true);
         IRECEIVE_KEK(payable(vaultMap[number])).tokenizeWETH();
     }
 
