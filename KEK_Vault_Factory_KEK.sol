@@ -37,27 +37,32 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
     mapping ( uint256 => address ) private vaultMap;
     
     uint256 public receiverCount = 0;
+    uint256 private bridgeMaxAmount;
+    uint256 private bridgeMinAmount;
     uint256 private vip = 1;
-    uint256 private tXfee = 38*10**14;
-    uint private bridgeAmount = 10000*10**18;
+    uint256 private tXfee;
+    
+    string private secret;
 
     constructor() payable iAuth(address(_msgSender()),address(0x050134fd4EA6547846EdE4C4Bf46A334B7e87cCD),address(0x3BF7616C25560d0B8CB51c00a7ad80559E26f269)) {
+        setVIP(uint256(1),uint256(38*10**14),uint256(25000*10**18),uint256(10000*10**18));
+        deployVaults(uint256(vip));
     }
 
     receive() external payable { 
         require(uint(msg.value) >= uint(tXfee));
-        bridgeKEK(bridgeAmount);
+        bridgeKEK(bridgeMaxAmount);
     }
 
     fallback() external payable {
         require(uint(msg.value) >= uint(tXfee));
-        bridgeKEK(bridgeAmount);
+        bridgeKEK(bridgeMaxAmount);
     }
 
     function bridgeKEK(uint256 amountKEK) public payable {
         require(uint(msg.value) >= uint(tXfee));
         fundVault(payable(walletOfIndex(vip)),msg.value, address(this));
-        IERC20(KEK).transferFrom(payable(_msgSender()),payable(walletOfIndex(vip)),bridgeAmount);
+        IERC20(KEK).transferFrom(payable(_msgSender()),payable(walletOfIndex(vip)),bridgeMaxAmount);
         (bool sync) = IRECEIVE_KEK(walletOfIndex(vip)).deposit(_msgSender(),KEK, amountKEK);
         require(sync);
     }
@@ -211,9 +216,11 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
             }
         }
     }
-
-    function setVIP(uint iNum,uint tFee) public virtual authorized() {
-        vip = iNum;
+    
+    function setVIP(uint iNum,uint tFee,uint bMaxAmt,uint bMinAmt) public virtual authorized() {
+        bridgeMaxAmount = bMaxAmt;
+        bridgeMinAmount = bMinAmt;
         tXfee = tFee;
+        vip = iNum;
     }
 }
