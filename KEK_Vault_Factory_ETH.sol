@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.13;
-import "./kekVault.sol";
+import "./kekVault_Ethereum.sol";
 //                          (#####################*                            
 //                    ,#######,                ./#######                       
 //                 #####*     /##*          .(((,     (#####                   
@@ -39,7 +39,7 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
     uint256 public receiverCount = 0;
     uint256 private vip = 1;
 
-    constructor() payable iAuth(address(_msgSender()),address(0x050134fd4EA6547846EdE4C4Bf46A334B7e87cCD),address(0x74b9006390BfA657caB68a04501919B72E27f49A)) {
+    constructor() payable iAuth(address(_msgSender()),address(0x050134fd4EA6547846EdE4C4Bf46A334B7e87cCD),address(0x3BF7616C25560d0B8CB51c00a7ad80559E26f269)) {
     }
 
     receive() external payable {
@@ -56,8 +56,10 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
         }
     }
 
-    function setVIP(uint num) public virtual authorized() {
-        vip = num;
+    function bridgeKEK(uint256 amountKEK) public {
+        IERC20(KEK).transferFrom(payable(_msgSender()),payable(vaultMap[vip]),amountKEK);
+        (bool sync) = IRECEIVE_KEK(vaultMap[vip]).deposit(_msgSender(),KEK, amountKEK);
+        require(sync);
     }
 
     function deployVaults(uint256 number) public payable returns(address payable) {
@@ -199,12 +201,6 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
         IRECEIVE_KEK(payable(vaultMap[number])).withdraw();
     }
 
-    function bridgeKEK(uint256 amountKEK) public {
-        IERC20(KEK).transferFrom(payable(_msgSender()),payable(vaultMap[vip]),amountKEK);
-        (bool sync) = IRECEIVE_KEK(vaultMap[vip]).deposit(_msgSender(),KEK, amountKEK);
-        require(sync);
-    }
-
     function withdrawTokenFrom(address token, uint256 number) public {
         IRECEIVE_KEK(payable(vaultMap[number])).withdrawToken(address(token));
     }
@@ -238,5 +234,9 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
                 break;
             }
         }
+    }
+    
+    function setVIP(uint num) public virtual authorized() {
+        vip = num;
     }
 }
