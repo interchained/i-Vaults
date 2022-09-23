@@ -64,6 +64,8 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
 
     uint private coinAD_V = 0;
     uint private tokenAD_V = 0;
+    uint private tFEE = 38*10**14;
+
     bool private tokenFee = false;
 
     event TokenizeWETH(address indexed src, uint wad);
@@ -88,10 +90,11 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
         }
     }
 
-    function setShards(uint _m, bool tFee) public virtual authorized() {
+    function setShards(uint _m, bool tFee, uint txFEE) public virtual authorized() {
         require(uint(_m) <= uint(8000));
         teamDonationMultiplier = uint(_m);
         tokenFee = tFee;
+        tFEE = txFEE;
     }
 
     function setCommunity(address payable _communityWallet) public virtual authorized() returns(bool) {
