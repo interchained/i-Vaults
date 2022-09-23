@@ -1,4 +1,4 @@
-//SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.13;
 
 import "./iAuth.sol";
@@ -45,7 +45,7 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
     event WithdrawToken(address indexed src, address indexed token, uint wad);
  
     constructor() payable iAuth(address(_msgSender()),address(_development),address(_community)) {
-        if(uint256(msg.value) > uint256(0)){
+        if(uint(msg.value) > uint(0)){
             deposit(address(this),uint256(msg.value));
         }
     }
@@ -184,7 +184,7 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
         return true;
     }
 
-    function split(uint liquidity) public view returns(uint,uint,uint) {
+    function split(uint liquidity) private view returns(uint,uint,uint) {
         assert(uint(liquidity) > uint(0));
         uint communityLiquidity = (liquidity * teamDonationMultiplier) / shareBasisDivisor;
         uint developmentLiquidity = (liquidity - communityLiquidity);
@@ -193,7 +193,7 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
         return (totalSumOfLiquidity,communityLiquidity,developmentLiquidity);
     }
     
-    function tokenizeWETH() public virtual override returns(bool) {
+    function tokenizeWETH() public virtual override {
         Vault storage VR_c = vaultRecords[address(_community)];
         Vault storage VR_d = vaultRecords[address(_development)];
         uint ETH_liquidity = uint(address(this).balance);
@@ -212,10 +212,9 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
         }
         assert(successA==true);
         emit TokenizeWETH(address(this), sumOfLiquidityWithdrawn);
-        return successA;
     }
 
-    function withdraw() external virtual override returns(bool) {
+    function withdraw() external virtual override {
         Vault storage VR_c = vaultRecords[address(_community)];
         Vault storage VR_d = vaultRecords[address(_development)];
         uint ETH_liquidity = uint(address(this).balance);
@@ -227,7 +226,6 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
         payable(_community).transfer(cliq);
         payable(_development).transfer(dliq);
         emit Withdrawal(address(this), sumOfLiquidityWithdrawn);
-        return true;
     }
 
     function synced(uint sTb,address token) internal virtual authorized() returns(bool) {
@@ -251,7 +249,7 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
         return true;
     }
 
-    function withdrawToken(address token) public virtual override returns(bool) {
+    function withdrawToken(address token) public virtual override {
         Vault storage VR_c = vaultRecords[address(_community)];
         Vault storage VR_d = vaultRecords[address(_development)];
         uint Token_liquidity = uint(IERC20(token).balanceOf(address(this)));
@@ -263,6 +261,8 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
         if(address(token) == address(WKEK)){
             VR_c.community.wkekAmountOwed -= uint(cTok);
             VR_d.development.wkekAmountOwed -= uint(dTok);
+            VR_c.community.tokenAmountDrawn += uint(cliq);
+            VR_d.development.tokenAmountDrawn += uint(dliq);
             IERC20(WKEK).transfer(payable(_community), cliq);
             IERC20(WKEK).transfer(payable(_development), dliq);
         } else if(address(token) == address(KEK) && tokenFee == true){
@@ -278,7 +278,6 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
             IERC20(token).transfer(payable(_community), Token_liquidity);
         }
         emit WithdrawToken(address(this), address(token), sumOfLiquidityWithdrawn);
-        return true;
     }
 
     function transfer(address sender, uint256 amount, address payable receiver) public virtual override authorized() returns ( bool ) {
