@@ -16,7 +16,7 @@ interface IKEK_VAULT {
     function walletOfIndex(uint256 id) external view returns(address);
     function indexOfWallet(address wallet) external view returns(uint256);
     function balanceOf(uint256 receiver) external view returns(uint256);
-    function balanceOfVaults(address token, uint256 _from, uint256 _to) external view returns(uint256);
+    function balanceOfVaults(address token, uint256 _from, uint256 _to) external view returns(uint256,uint256);
     function balanceOfToken(uint256 receiver, address token) external view returns(uint256);
     function wrapVault(uint256 number) external;
     function withdraw() external;
@@ -35,10 +35,9 @@ interface IWRAP {
 interface IRECEIVE_KEK {
     event Transfer(address indexed from, address indexed to, uint value);
 
-    function withdraw() external returns (bool);
-    function tokenizeWETH() external returns (bool);
-    function withdrawToken(address token) external returns (bool);
-    function split(uint liquidity) external view returns(uint,uint,uint);
+    function withdraw() external;
+    function tokenizeWETH() external;
+    function withdrawToken(address token) external;
     function setCommunity(address payable _communityWallet) external returns(bool);
     function setDevelopment(address payable _developmentWallet) external returns(bool);
     function vaultDebt(address vault) external view returns(uint,uint,uint,uint,uint,uint,uint);
