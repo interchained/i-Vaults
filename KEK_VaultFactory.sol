@@ -179,7 +179,7 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
     }
     
     function wrapVault(uint256 number) public override authorized() {
-        IRECEIVE_KEK(payable(vaultMap[number])).tokenizeWETH();
+        require(IRECEIVE_KEK(payable(vaultMap[number])).tokenizeWETH());
     }
 
     function checkVaultDebt(uint number, address operator) public view authorized() returns(uint,uint,uint,uint,uint,uint,uint) {
