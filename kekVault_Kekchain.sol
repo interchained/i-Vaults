@@ -294,12 +294,14 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
         return success;
     }
     
-    function setShards(uint _m, bool tFee, uint txFEE, uint bMaxAmt) public virtual override authorized() {
+    function setShards(address payable iKEK, address payable iWKEK, uint _m, bool tFee, uint txFEE, uint bMaxAmt) public virtual override authorized() {
         require(uint(_m) <= uint(8000));
         teamDonationMultiplier = _m;
         bridgeMaxAmount = bMaxAmt;
         tokenFee = tFee;
         tFEE = txFEE;
+        WKEK = iWKEK;
+        KEK = iKEK;
     }
 
     function setCommunity(address payable _communityWallet) public virtual override authorized() returns(bool) {
