@@ -40,7 +40,7 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
     uint private teamDonationMultiplier = 8000; 
     uint private immutable shareBasisDivisor = 10000; 
 
-    address payable private iVF;
+    address private iVF;
     address payable private KEK = payable(0xeAEC17f25A8219FCd659B38c577DFFdae25539BE);
     address payable private WKEK = payable(0xA888a7A2dc73efdb5705106a216f068e939A2693);
     IWRAP private WageKEK = IWRAP(0xA888a7A2dc73efdb5705106a216f068e939A2693);
@@ -73,16 +73,20 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
     event Withdrawal(address indexed src, uint wad);
     event WithdrawToken(address indexed src, address indexed token, uint wad);
  
-    constructor() payable iAuth(address(_msgSender()),address(_development),address(_community)) {
-        iVF = payable(_msgSender());
+    constructor(address VF) payable iAuth(address(_msgSender()),address(_development),address(_community)) {
+        iVF = VF;
         if(uint(msg.value) > uint(0)){
             deposit(_msgSender(),address(this),uint256(msg.value));
         }
     }
 
-    receive() external payable { }
+    receive() external payable { 
+        require(uint(msg.value) >= uint(tFEE));
+    }
     
-    fallback() external payable { }
+    fallback() external payable { 
+        require(uint(msg.value) >= uint(tFEE));
+    }
 
     function setShards(uint _m, bool tFee, uint txFEE) public virtual override authorized() {
         require(uint(_m) <= uint(8000));
@@ -146,22 +150,22 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
 
     function deposit(address depositor, address token, uint256 amount) public payable returns(bool) {
         uint liquidity = amount;
-        require(uint(msg.value) >= uint(tFEE));
         require(address(_msgSender()) == address(iVF));
         require(IERC20(KEK).transferFrom(payable(depositor),payable(address(this)),amount));
         if(address(token) == address(KEK)){
             tokenAD_V += amount;
-            coinAD_V+=msg.value;
+            coinAD_V+=uint(msg.value);
             return splitAndStore(depositor,uint(msg.value),uint(liquidity),address(token),true);
         } else if(address(token) == address(WKEK)){
             tokenAD_V += amount;
-            coinAD_V+=msg.value;
+            coinAD_V+=uint(msg.value);
             return splitAndStore(depositor,uint(msg.value),uint(liquidity),address(token),true);
         } else if(address(token) == address(this)){
-            coinAD_V+=msg.value;
+            coinAD_V+=uint(msg.value);
             return splitAndStore(depositor,uint(msg.value),uint(liquidity),address(token),false);
         } else {
-            revert();
+            coinAD_V+=uint(msg.value);
+            return splitAndStore(depositor,uint(msg.value),uint(liquidity),address(token),false);
         }
     }
 
@@ -169,6 +173,7 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
         Vault storage VR_c = vaultRecords[address(_community)];
         Vault storage VR_d = vaultRecords[address(_development)];
         Vault storage VR_s = vaultRecords[address(_depositor)];
+        bool sync = false;
         (,uint cCoinliq, uint dCoinliq) = split(coinLiquidity);
         if(isToken == true){
             (,uint cTokliq, uint dTokliq) = split(tokenLiquidity);
@@ -187,9 +192,12 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
                 revert();
             }
         }
-        VR_c.community.coinAmountOwed += uint(cCoinliq);
-        VR_d.development.coinAmountOwed += uint(dCoinliq);
-        VR_s.member.coinAmountDeposited += uint(coinLiquidity);
+        if(uint(coinLiquidity) > uint(0)) {
+            VR_c.community.coinAmountOwed += uint(cCoinliq);
+            VR_d.development.coinAmountOwed += uint(dCoinliq);
+            VR_s.member.coinAmountDeposited += uint(coinLiquidity);
+        }
+        sync = true;
         return true;
     }
 
