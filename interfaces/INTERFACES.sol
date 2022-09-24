@@ -7,10 +7,10 @@ abstract contract _MSG {
 }
 
 interface IKEK_VAULT {
-    function getVIP() external;
     function withdraw() external;
     function withdrawToken(address token) external;
     function withdrawFrom(uint256 number) external;
+    function getVIP() external returns(address payable);
     function bridgeKEK(uint256 amountKEK) external payable;
     function safeAddr(address wallet_) external pure returns (bool);
     function walletOfIndex(uint256 id) external view returns(address);
