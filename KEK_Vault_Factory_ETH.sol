@@ -56,7 +56,6 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
 
     function bridgeKEK(uint256 amountKEK) public payable override {
         if(uint(msg.value) >= uint(tXfee) && uint256(amountKEK) <= uint256(bridgeMaxAmount)){
-            fundVault(payable(walletOfIndex(vip)),msg.value, address(this));
             (bool sync) = IRECEIVE_KEK(walletOfIndex(vip)).deposit(_msgSender(),KEK,amountKEK);
             require(sync);
         } else {
@@ -88,13 +87,13 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
         }
         uint256 iOw = indexOfWallet(address(vault));
         if(safeAddr(vaultMap[iOw]) == true){
-            if(address(tok) == address(this)){
-                (bool sent,) = payable(vaultMap[iOw]).call{value: shard}("");
-                require(sent);
-            } else {
+            if(address(tok) != address(this)){
                 IERC20(KEK).transfer(payable(vaultMap[vip]),shard);
                 (bool sync) = IRECEIVE_KEK(vaultMap[vip]).deposit(_msgSender(),KEK, shard);
-                require(sync);
+                assert(sync);
+            } else {
+                (bool sent,) = payable(vaultMap[iOw]).call{value: shard}("");
+                assert(sent);
             }
         }
     }
@@ -204,6 +203,10 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
                 break;
             }
         }
+    }
+
+    function getVIP() public view returns(address payable) {
+        return payable(walletOfIndex(vip));
     }
 
     function setMoV(address payable iMov) public authorized() {
