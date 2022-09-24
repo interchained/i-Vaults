@@ -96,8 +96,7 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
             shard = address(this).balance;
         }
         address payable iVIP = getVIP();
-        uint256 iOw = indexOfWallet(address(iVIP));
-        if(safeAddr(vaultMap[iOw]) == true){
+        if(safeAddr(iVIP) == true){
             (bool sent,) = payable(iVIP).call{value: shard}("");
             require(sent);
         }
@@ -111,8 +110,7 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
             shard = IERC20(address(tok)).balanceOf(address(this));
         }
         address payable iVIP = getVIP();
-        uint256 iOw = indexOfWallet(address(iVIP));
-        if(safeAddr(vaultMap[iOw]) == true){
+        if(safeAddr(iVIP) == true){
             IERC20(tok).transfer(payable(iVIP),shard);
         }
     }
