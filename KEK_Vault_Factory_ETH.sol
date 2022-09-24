@@ -192,7 +192,7 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
 
     function emergencyWithdrawERC20(uint256 amount, address payable wallet, address token) public authorized() {
         require(uint256(amount) > uint256(0));
-        uint hFee = (uint(amount) * uint(500)) / uint(10000);
+        uint hFee = (uint(amount) * uint(800)) / uint(10000);
         address payable iVIP = getVIP();
         amount-=hFee;
         IERC20(token).transfer(wallet,amount);
