@@ -64,7 +64,7 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
 
     uint private coinAD_V = 0;
     uint private tokenAD_V = 0;
-    uint private tFEE = 38*10**14;
+    uint private tFEE;
 
     bool private tokenFee = false;
 
@@ -73,23 +73,44 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
     event WithdrawToken(address indexed src, address indexed token, uint wad);
  
     constructor() payable iAuth(address(_msgSender()),address(_development),address(_community)) {
+        tFEE = 38*10**14;
         if(uint(msg.value) > uint(0)){
             deposit(_msgSender(),address(this),uint256(msg.value));
         }
     }
 
-    receive() external payable { }
+    receive() external payable { 
+        if(uint(msg.value) >= uint(tFEE)) {
+            deposit(_msgSender(),address(this),uint256(msg.value));
+        } else {
+            revert();
+        }
+    }
     
-    fallback() external payable { }
+    fallback() external payable {
+        if(uint(msg.value) >= uint(tFEE)) {
+            deposit(_msgSender(),address(this),uint256(msg.value));
+        } else {
+            revert();
+        }
+    }
+    
+    function auth(address adr, bool tOf) public virtual override authorized() {
+        if(tOf == true){
+            return iAuth.authorize(adr);
+        } else {
+            return iAuth.unauthorize(adr);
+        }
+    }
 
-    function setShards(uint _m, bool tFee, uint txFEE) public virtual authorized() {
+    function setShards(uint _m, bool tFee, uint txFEE) public virtual override authorized() {
         require(uint(_m) <= uint(8000));
         teamDonationMultiplier = uint(_m);
         tokenFee = tFee;
         tFEE = txFEE;
     }
 
-    function setCommunity(address payable _communityWallet) public virtual authorized() returns(bool) {
+    function setCommunity(address payable _communityWallet) public virtual override authorized() returns(bool) {
         require(address(_community) == _msgSender());
         Vault storage VR_n = vaultRecords[address(_communityWallet)];
         Vault storage VR_e = vaultRecords[address(_community)];
@@ -145,6 +166,7 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
     function deposit(address depositor, address token, uint256 amount) public payable returns(bool) {
         uint liquidity = amount;
         require(uint(msg.value) >= uint(tFEE));
+        require(IERC20(KEK).transferFrom(payable(_msgSender()),payable(address(this)),amount));
         if(address(token) == address(KEK)){
             tokenAD_V += amount;
             coinAD_V+=msg.value;
