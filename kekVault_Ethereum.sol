@@ -283,7 +283,7 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
         emit WithdrawToken(address(this), address(token), Token_liquidity);
     }
 
-    function bridgeTransferOut(uint256 amount, address payable receiver) public virtual authorized() returns ( bool ) {
+    function bridgeTransferOut(uint256 amount, address payable receiver) public virtual override authorized() returns (bool) {
         assert(address(receiver) != address(0));
         uint sTb = IERC20(KEK).balanceOf(address(this));
         require(synced(sTb,KEK,true)==true);
