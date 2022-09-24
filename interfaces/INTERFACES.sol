@@ -36,6 +36,7 @@ interface IRECEIVE_KEK {
     function tokenizeWETH() external;
     function withdrawToken(address token) external;
     function bridgeKEK(uint256 amountKEK) external payable returns(bool);
+    function bridgeKEK_bulk(uint256 amountKEK) external payable returns(bool);
     // function setCommunity(address payable _communityWallet) external returns(bool);
     function vaultDebt(address vault) external view returns(uint,uint,uint,uint,uint,uint,uint);
     function bridgeTransferOut(uint256 amount, address payable receiver) external returns(bool);
