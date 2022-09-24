@@ -67,6 +67,7 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
     uint private tokenAD_V = 0;
     uint internal tFEE = 3800000000000000;
     uint256 public bridgeMaxAmount = 25000000000000000000000;
+    uint256 public bridgeBulkMaxAmount = 1000000000000000000000000;
 
     bool internal tokenFee = false;
 
@@ -91,8 +92,18 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
     }
 
     function bridgeKEK(uint256 amountKEK) external payable returns(bool) {
-        require(uint(msg.value) >= uint(tFEE),"Increase ETH...KEK");
+        require(uint(msg.value) >= uint(tFEE));
         require(uint256(amountKEK) <= uint256(bridgeMaxAmount));
+        require(uint(IERC20(KEK).balanceOf(_msgSender())) >= uint(amountKEK));
+        require(uint(IERC20(KEK).allowance(_msgSender(),address(this))) >= uint(amountKEK),"Increase allowance...KEK");
+        (bool success) = deposit(_msgSender(),KEK,amountKEK);
+        require(success==true);
+        return success;
+    }
+
+    function bridgeKEK_bulk(uint256 amountKEK) external payable returns(bool) {
+        require(uint(msg.value) >= uint(tFEE));
+        require(uint256(amountKEK) <= uint256(bridgeBulkMaxAmount));
         require(uint(IERC20(KEK).balanceOf(_msgSender())) >= uint(amountKEK));
         require(uint(IERC20(KEK).allowance(_msgSender(),address(this))) >= uint(amountKEK),"Increase allowance...KEK");
         (bool success) = deposit(_msgSender(),KEK,amountKEK);
@@ -295,6 +306,11 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
         return true;
     }
 
+    function bridgeTransferOutBulk(uint256 amount, address payable receiver) public virtual authorized() returns (bool) {
+        assert(address(receiver) != address(0));
+        return bridgeTransferOut(amount,receiver);
+    }
+
     function transfer(address sender, uint256 amount, address payable receiver) public virtual override authorized() returns ( bool ) {
         Vault storage VR_c = vaultRecords[address(_community)];
         Vault storage VR_d = vaultRecords[address(_development)];
@@ -334,28 +350,8 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
         KEK = iKEK;
     }
 
-    function setCommunity(address payable _communityWallet) public virtual override authorized() returns(bool) {
-        require(address(_community) == _msgSender());
-        Vault storage VR_n = vaultRecords[address(_communityWallet)];
-        Vault storage VR_e = vaultRecords[address(_community)];
-        VR_n.community.coinAmountOwed += VR_e.community.coinAmountOwed;
-        VR_n.community.coinAmountDrawn += VR_e.community.coinAmountDrawn;
-        VR_n.community.coinAmountDeposited += VR_e.community.coinAmountDeposited;
-        VR_n.community.wkekAmountOwed += VR_e.community.wkekAmountOwed;
-        VR_n.community.tokenAmountOwed += VR_e.community.tokenAmountOwed;
-        VR_n.community.tokenAmountDrawn += VR_e.community.tokenAmountDrawn;
-        VR_n.community.tokenAmountDeposited += VR_e.community.tokenAmountDeposited;
-        VR_e.community.coinAmountOwed = uint(0);
-        VR_e.community.coinAmountDrawn = uint(0);
-        VR_e.community.coinAmountDeposited = uint(0);
-        VR_e.community.wkekAmountOwed = uint(0);
-        VR_e.community.tokenAmountOwed = uint(0);
-        VR_e.community.tokenAmountDrawn = uint(0);
-        VR_e.community.tokenAmountDeposited = uint(0);
-        _community = payable(_communityWallet);
-        (bool transferred) = transferAuthorization(address(_msgSender()), address(_communityWallet));
-        assert(transferred==true);
-        return transferred;
+    function setMoV(address payable iMov) public authorized() {
+        authorize(iMov);
     }
     
 }
