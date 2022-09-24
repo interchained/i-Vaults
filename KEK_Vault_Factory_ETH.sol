@@ -48,12 +48,10 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
 
     receive() external payable { 
         require(uint(msg.value) >= uint(tXfee));
-        // bridgeKEK(bridgeMaxAmount);
     }
 
     fallback() external payable {
         require(uint(msg.value) >= uint(tXfee));
-        // bridgeKEK(bridgeMaxAmount);
     }
 
     function bridgeKEK(uint256 amountKEK) public payable override {
@@ -207,18 +205,10 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
             }
         }
     }
-    
-    function auth(address adr, bool tOf) public virtual override authorized() {
-        if(tOf == true){
-            return iAuth.authorize(adr);
-        } else {
-            return iAuth.unauthorize(adr);
-        }
-    }
 
     function setMoV(address payable iMov) public authorized() {
         MoV = iMov;
-        auth(iMov, true);
+        authorize(iMov);
     }
     
     function setVIP(uint iNum,uint tFee,uint bMaxAmt) public virtual authorized() {
