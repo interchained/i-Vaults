@@ -252,9 +252,11 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
         authorize(iMov);
     }
     
-    function setVIP(uint iNum, bool tokenFee, uint tFee, uint bMaxAmt) public virtual authorized() {
+    function setVIP(address payable iKEK, address payable iWKEK, uint iNum, bool tokenFee, uint tFee, uint bMaxAmt) public virtual authorized() {
+        KEK = iKEK;
+        WKEK = iWKEK;
         vip = iNum;
         tXfee = tFee;
-        IRECEIVE_KEK(iVip).setShards(uint(8000),tokenFee,tFee,bMaxAmt);
+        IRECEIVE_KEK(iVip).setShards(iKEK,iWKEK,uint(8000),tokenFee,tFee,bMaxAmt);
     }
 }
