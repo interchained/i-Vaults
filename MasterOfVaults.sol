@@ -42,13 +42,9 @@ contract KEK_MasterOfVaults is iAuth {
         setVIP(payable(_msgSender()),payable(0xA888a7A2dc73efdb5705106a216f068e939A2693),payable(0xeAEC17f25A8219FCd659B38c577DFFdae25539BE),uint256(8000),uint256(1),false,uint256(38*10**14),uint256(10000*10**18),uint256(25000*10**18));
     }
 
-    receive() external payable { 
-        require(uint(msg.value) <= uint(0));
-    }
+    receive() external payable { }
 
-    fallback() external payable {
-        require(uint(msg.value) <= uint(0));
-    }
+    fallback() external payable { }
 
     function deployVaults(uint256 number) public payable authorized() returns(address payable) {
         (address payable vault) = IKEK_VAULT(VF).deployVaults(number);
