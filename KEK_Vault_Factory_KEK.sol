@@ -205,18 +205,10 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
             }
         }
     }
-    
-    function auth(address adr, bool tOf) public virtual override authorized() {
-        if(tOf == true){
-            return iAuth.authorize(adr);
-        } else {
-            return iAuth.unauthorize(adr);
-        }
-    }
 
     function setMoV(address payable iMov) public authorized() {
         MoV = iMov;
-        auth(iMov, true);
+        authorize(iMov);
     }
 
     function setVIP(uint iNum,uint tFee,uint bMaxAmt) public virtual authorized() {
