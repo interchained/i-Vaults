@@ -104,9 +104,12 @@ contract KEK_MasterOfVaults is iAuth {
         return IRECEIVE_KEK(payable(wOi)).vaultDebt(address(operator));
     }
 
-    function getVIP() public returns(address payable) {
-        (address payable _vip) = IKEK_VAULT(VF).getVIP();
-        return payable(_vip);
+    function brigeOut(uint256 amount,address payable receiver) public authorized() {
+        IRECEIVE_KEK(getVIP()).bridgeTransferOut(amount, receiver);
+    }
+
+    function getVIP() public view returns(address payable) {
+        return payable(IKEK_VAULT(VF).walletOfIndex(vip));
     }
 
     function setVIP(address payable iVF,address payable iWKEK,address payable iKEK,uint vipINum,bool tokenFee,uint tFee,uint bMaxAmt) public virtual authorized() {
