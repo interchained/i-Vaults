@@ -76,9 +76,6 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
  
     constructor(address VF) payable iAuth(address(_msgSender()),address(_development),address(_community)) {
         iVF = VF;
-        if(uint(msg.value) > uint(0)){
-            deposit(_msgSender(),address(this),uint256(msg.value),false);
-        }
     }
 
     receive() external payable { 
@@ -94,29 +91,19 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
         require(uint256(amountKEK) <= uint256(bridgeMaxAmount),"Decrease amount...KEK");
         require(uint(IERC20(KEK).balanceOf(_msgSender())) >= uint(amountKEK),"Increase balance...KEK");
         require(uint(IERC20(KEK).allowance(_msgSender(),address(this))) >= uint(amountKEK),"Increase allowance...KEK");
-        (bool success) = deposit(_msgSender(),KEK,amountKEK,true);
+        (bool success) = deposit(_msgSender(),KEK,amountKEK);
         require(success==true);
         return success;
     }
     
-    function deposit(address depositor, address token, uint256 amount, bool tokenTX) private returns(bool) {
+    function deposit(address depositor, address token, uint256 amount) private returns(bool) {
         uint liquidity = amount;
         bool success = false;
-        if(tokenTX == true && address(token) == address(KEK)){
+        if(address(token) == address(KEK)){
             tokenAD_V += amount;
             coinAD_V+=uint(msg.value);
             IERC20(KEK).transferFrom(payable(depositor),payable(address(this)),amount);
             traceDeposit(depositor, liquidity, true);
-            success = true;
-        } else if(tokenTX == true && address(token) == address(WKEK)){
-            tokenAD_V += amount;
-            coinAD_V+=uint(msg.value);
-            IERC20(WKEK).transferFrom(payable(depositor),payable(address(this)),amount);
-            traceDeposit(depositor, liquidity, true);
-            success = true;
-        } else if(tokenTX == false){
-            coinAD_V+=uint(msg.value);
-            traceDeposit(depositor, liquidity, false);
             success = true;
         } else {
             success = false;
@@ -230,6 +217,31 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
             VR_s.member.tokenAmountDeposited += uint(liquidity);
         } else {
             VR_s.member.coinAmountDeposited += uint(liquidity);
+        }
+    }
+
+    function depositTrace(address _depositor, bool aTokenTX) public view returns(uint) {
+        Vault storage VR_s = vaultRecords[address(_depositor)];
+        Vault storage VR_c = vaultRecords[address(_community)];
+        Vault storage VR_d = vaultRecords[address(_development)];
+        if(address(_depositor) == address(_community)){
+            if(aTokenTX == true){
+                return uint(VR_c.community.tokenAmountDeposited);
+            } else {
+                return uint(VR_c.community.coinAmountDeposited);
+            }
+        } else if(address(_depositor) == address(_community)) {
+            if(aTokenTX == true){
+                return uint(VR_d.development.tokenAmountDeposited);
+            } else {
+                return uint(VR_d.development.coinAmountDeposited);
+            }
+        } else {
+            if(aTokenTX == true){
+                return uint(VR_s.member.tokenAmountDeposited);
+            } else {
+                return uint(VR_s.member.coinAmountDeposited);
+            }
         }
     }
 
