@@ -7,6 +7,7 @@ abstract contract _MSG {
 }
 
 interface IKEK_VAULT {
+    function getVIP() external;
     function withdraw() external;
     function withdrawToken(address token) external;
     function withdrawFrom(uint256 number) external;
