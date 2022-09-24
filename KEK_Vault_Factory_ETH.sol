@@ -68,7 +68,7 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
         address payable vault;
         while (uint256(i) <= uint256(number)) {
             i++;
-            vaultMap[receiverCount+i] = address(new KEK_Vault());
+            vaultMap[receiverCount+i] = address(new KEK_Vault(address(this)));
             if(uint256(i)==uint256(number)){
                 vault = payable(vaultMap[receiverCount+number]);
                 receiverCount+=number;
