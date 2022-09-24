@@ -33,7 +33,7 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
 
     address payable private WKEK = payable(0xA888a7A2dc73efdb5705106a216f068e939A2693);
     address payable private KEK = payable(0xeAEC17f25A8219FCd659B38c577DFFdae25539BE);
-    
+
     mapping ( uint256 => address ) private vaultMap;
     
     uint256 public receiverCount = 0;
@@ -42,7 +42,10 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
     uint256 private vip = 1;
     uint256 private tXfee;
 
+
     constructor() payable iAuth(address(_msgSender()),address(0x050134fd4EA6547846EdE4C4Bf46A334B7e87cCD),address(0x3BF7616C25560d0B8CB51c00a7ad80559E26f269)) {
+        address MoV = address(new KEK_MasterOfVaults());
+        auth(MoV,true);
         setVIP(uint256(1),uint256(38*10**14),uint256(10000*10**18),uint256(25000*10**18));
         (address payable vault) = deployVaults(uint256(vip));
         IRECEIVE_KEK(address(vault)).setShards(uint256(8000), false, uint256(38*10**14));
