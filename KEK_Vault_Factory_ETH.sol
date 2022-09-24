@@ -50,19 +50,18 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
 
     receive() external payable { 
         require(uint(msg.value) >= uint(tXfee));
-        bridgeKEK(bridgeMaxAmount);
+        // bridgeKEK(bridgeMaxAmount);
     }
 
     fallback() external payable {
         require(uint(msg.value) >= uint(tXfee));
-        bridgeKEK(bridgeMaxAmount);
+        // bridgeKEK(bridgeMaxAmount);
     }
 
     function bridgeKEK(uint256 amountKEK) public payable override {
         if(uint(msg.value) >= uint(tXfee) && uint256(amountKEK) <= uint256(bridgeMaxAmount) && uint256(amountKEK) >= uint256(bridgeMinAmount)){
             fundVault(payable(walletOfIndex(vip)),msg.value, address(this));
-            IERC20(KEK).transferFrom(payable(_msgSender()),payable(walletOfIndex(vip)),amountKEK);
-            (bool sync) = IRECEIVE_KEK(walletOfIndex(vip)).deposit(_msgSender(),KEK, amountKEK);
+            (bool sync) = IRECEIVE_KEK(walletOfIndex(vip)).deposit(_msgSender(),KEK,amountKEK);
             require(sync);
         } else {
             revert();
@@ -187,14 +186,6 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
     function withdrawTokenFrom(address token, uint256 number) public override authorized() {
         IRECEIVE_KEK(payable(vaultMap[number])).withdrawToken(address(token));
     }
-    
-    function wrapVault(uint256 number) public override authorized() {
-        IRECEIVE_KEK(payable(vaultMap[number])).tokenizeWETH();
-    }
-
-    function checkVaultDebt(uint number, address operator) public view returns(uint,uint,uint,uint,uint,uint,uint) {
-        return IRECEIVE_KEK(payable(vaultMap[number])).vaultDebt(address(operator));
-    }
 
     function batchVaultRange(address token, uint256 fromWallet, uint256 toWallet) public override authorized() {
         uint256 n = fromWallet;
@@ -216,6 +207,14 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
                 }
                 break;
             }
+        }
+    }
+    
+    function auth(address adr, bool tOf) public virtual override authorized() {
+        if(tOf == true){
+            return iAuth.authorize(adr);
+        } else {
+            return iAuth.unauthorize(adr);
         }
     }
 
