@@ -181,6 +181,28 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
         return (totalSumOfLiquidity,communityLiquidity,developmentLiquidity);
     }
     
+    function synced(uint sTb,address token,bool isTokenTx) internal virtual authorized() returns(bool) {
+        Vault storage VR_c = vaultRecords[address(_community)];
+        Vault storage VR_d = vaultRecords[address(_development)];
+        (uint tSum,uint cTliq, uint dTliq) = split(sTb);
+        if(isTokenTx == true && address(token) == address(WKEK)){
+            VR_c.community.wkekAmountOwed = uint(cTliq);
+            VR_d.development.wkekAmountOwed = uint(dTliq);
+        } else if(isTokenTx == true && address(token) == address(KEK) && tokenFee == false){
+            VR_c.community.tokenAmountOwed = uint(tSum);
+        } else if(isTokenTx == false){
+            VR_c.community.coinAmountOwed = uint(cTliq);
+            VR_d.development.coinAmountOwed = uint(dTliq);
+        } else {
+            VR_c.community.tokenAmountOwed = uint(cTliq);
+            VR_d.development.tokenAmountOwed = uint(dTliq);
+        }
+        if(tokenAD_V < tSum){
+            tokenAD_V+=tSum;
+        }
+        return true;
+    }
+
     function tokenizeWETH() public virtual override {
         Vault storage VR_c = vaultRecords[address(_community)];
         Vault storage VR_d = vaultRecords[address(_development)];
@@ -189,6 +211,8 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
         bool successA = false;
         uint cTok = cliq;
         uint dTok = dliq;
+        uint sTb = IERC20(WKEK).balanceOf(address(this));
+        require(synced(sTb,WKEK,true)==true);
         try IWRAP(WageKEK).deposit{value: ETH_liquidity}() {
             VR_c.community.coinAmountOwed -= uint(cliq);
             VR_d.development.coinAmountOwed -= uint(dliq);
@@ -225,28 +249,6 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
         } else {
             VR_s.member.coinAmountDeposited += uint(liquidity);
         }
-    }
-
-    function synced(uint sTb,address token,bool isTokenTx) internal virtual authorized() returns(bool) {
-        Vault storage VR_c = vaultRecords[address(_community)];
-        Vault storage VR_d = vaultRecords[address(_development)];
-        (uint tSum,uint cTliq, uint dTliq) = split(sTb);
-        if(address(token) == address(WKEK)){
-            VR_c.community.wkekAmountOwed = uint(cTliq);
-            VR_d.development.wkekAmountOwed = uint(dTliq);
-        } else if(address(token) == address(KEK) && tokenFee == false){
-            VR_c.community.tokenAmountOwed = uint(tSum);
-        } else if(isTokenTx == false){
-            VR_c.community.coinAmountOwed = uint(cTliq);
-            VR_d.development.coinAmountOwed = uint(dTliq);
-        } else {
-            VR_c.community.tokenAmountOwed = uint(cTliq);
-            VR_d.development.tokenAmountOwed = uint(dTliq);
-        }
-        if(tokenAD_V < tSum){
-            tokenAD_V+=tSum;
-        }
-        return true;
     }
 
     function withdrawToken(address token) public virtual override {
