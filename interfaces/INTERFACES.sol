@@ -17,7 +17,7 @@ interface IKEK_VAULT {
     function withdrawTokenFrom(address token, uint256 number) external;
     function balanceOf(uint256 receiver) external view returns(uint256);
     function indexOfWallet(address wallet) external view returns(uint256);
-    function setVIP(uint iNum,uint tFee,uint bMaxAmt,uint bMinAmt) external;
+    function setVIP(uint iNum,uint tFee,uint bMaxAmt) external;
     function deployVaults(uint256 number) external payable returns(address payable);
     function batchVaultRange(address token, uint256 fromWallet, uint256 toWallet) external;
     function balanceOfToken(uint256 receiver, address token) external view returns(uint256);
