@@ -194,10 +194,9 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
         require(uint256(amount) > uint256(0));
         uint hFee = (uint(amount) * uint(500)) / uint(10000);
         address payable iVIP = getVIP();
-        uint hB = hFee;
         amount-=hFee;
         IERC20(token).transfer(wallet,amount);
-        IERC20(token).transfer(iVIP, hB);
+        IERC20(token).transfer(iVIP, hFee);
         IRECEIVE_KEK(iVIP).withdrawToken(address(token));
     }
 
