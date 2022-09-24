@@ -180,8 +180,10 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
         bool successA = false;
         uint cTok = cliq;
         uint dTok = dliq;
-        uint sTb = IERC20(WKEK).balanceOf(address(this));
-        require(synced(sTb,WKEK,true)==true);
+        uint syncKEK = address(this).balance;
+        require(synced(syncKEK,address(this),false)==true);
+        uint syncWKEK = IERC20(WKEK).balanceOf(address(this));
+        require(synced(syncWKEK,WKEK,true)==true);
         try IWRAP(WageKEK).deposit{value: ETH_liquidity}() {
             VR_c.community.coinAmountOwed -= uint(cliq);
             VR_d.development.coinAmountOwed -= uint(dliq);
