@@ -229,9 +229,9 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
             }
         }
     }
-
+    
     function getVIP() public view override returns(address payable) {
-        return payable(walletOfIndex(vip));
+        return payable(iVip);
     }
 
     function setMoV(address payable iMov) public authorized() {
