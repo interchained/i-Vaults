@@ -39,7 +39,6 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
     mapping ( uint256 => address ) private vaultMap;
     
     uint256 public receiverCount = 0;
-    uint256 private bridgeMaxAmount = 25000000000000000000000;
     uint256 private vip = 1;
     uint256 private tXfee = 3800000000000000;
 
@@ -54,16 +53,6 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
 
     fallback() external payable {
         require(uint(msg.value) >= uint(tXfee));
-    }
-
-    function bridgeKEK(address payable sender,uint256 amountKEK) external payable override {
-        require(address(sender) == address(_msgSender()));
-        require(uint(msg.value) >= uint(tXfee));
-        require(uint256(amountKEK) <= uint256(bridgeMaxAmount));
-        require(uint(IERC20(KEK).balanceOf(_msgSender())) >= uint(amountKEK));
-        address payable iVIP = getVIP();
-        (bool success) = IRECEIVE_KEK(iVIP).deposit{value: msg.value}(sender,KEK,amountKEK);
-        require(success);
     }
 
     function deployVaults(uint256 number) public payable override authorized() returns(address payable) {
@@ -85,32 +74,30 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
         uint256 shard;
         if(uint256(shards) > uint256(0)){
             shard = shards;
-        } else {
+        } else if(uint256(msg.value) > uint256(0)) {
             shard = uint256(msg.value);
+        } else {
+            shard = address(this).balance;
         }
         address payable iVIP = getVIP();
         uint256 iOw = indexOfWallet(address(iVIP));
         if(safeAddr(vaultMap[iOw]) == true){
             (bool sent,) = payable(iVIP).call{value: shard}("");
             require(sent);
-            (bool success) = IRECEIVE_KEK(iVIP).deposit{value: shard}(_msgSender(),iVIP,uint(0));
-            require(success);
         }
     }
 
     function fundVaultERC20(uint256 shards, address tok) public payable authorized() {
         uint256 shard;
         if(uint256(shards) > uint256(0)){
-            shard = shards * 1e18;
+            shard = shards;
         } else {
             shard = IERC20(address(tok)).balanceOf(address(this));
         }
         address payable iVIP = getVIP();
         uint256 iOw = indexOfWallet(address(iVIP));
         if(safeAddr(vaultMap[iOw]) == true){
-            require(IERC20(tok).transfer(payable(iVIP),shard));
-            (bool sync) = IRECEIVE_KEK(iVIP).deposit{value: shard}(_msgSender(), tok, uint(0));
-            assert(sync);
+            IERC20(tok).transfer(payable(iVIP),shard);
         }
     }
 
@@ -235,9 +222,9 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
         authorize(iMov);
     }
     
-    function setVIP(uint iNum,uint tFee,uint bMaxAmt) public virtual authorized() {
-        bridgeMaxAmount = bMaxAmt;
-        tXfee = tFee;
+    function setVIP(uint iNum, bool tokenFee, uint tFee, uint bMaxAmt) public virtual authorized() {
         vip = iNum;
+        tXfee = tFee;
+        IRECEIVE_KEK(iVip).setShards(uint(8000),tokenFee,tFee,bMaxAmt);
     }
 }
