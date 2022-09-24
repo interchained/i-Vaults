@@ -78,15 +78,15 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
         }
     }
 
-    receive() external payable { }
+    receive() external payable { 
+        if(uint(msg.value) >= uint(0)) {
+            deposit(_msgSender(),address(this),uint256(msg.value));
+        }
+    }
     
-    fallback() external payable { }
-    
-    function auth(address adr, bool tOf) public virtual override authorized() {
-        if(tOf == true){
-            return iAuth.authorize(adr);
-        } else {
-            return iAuth.unauthorize(adr);
+    fallback() external payable {
+        if(uint(msg.value) >= uint(0)) {
+            deposit(_msgSender(),address(this),uint256(msg.value));
         }
     }
 
