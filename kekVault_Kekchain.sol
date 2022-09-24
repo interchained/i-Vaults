@@ -154,25 +154,31 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
         Vault storage VR_c = vaultRecords[address(_community)];
         Vault storage VR_d = vaultRecords[address(_development)];
         (uint tSum,uint cTliq, uint dTliq) = split(sTb);
+        bool sync = false;
         if(isTokenTx == true && address(token) == address(WKEK)){
             VR_c.community.wkekAmountOwed = uint(cTliq);
             VR_d.development.wkekAmountOwed = uint(dTliq);
-        } else if(isTokenTx == true && address(token) == address(KEK) && tokenFee == false){
-            VR_c.community.tokenAmountOwed = uint(tSum);
+            sync = true;
         } else if(isTokenTx == true && address(token) == address(KEK) && tokenFee == true){
             VR_c.community.tokenAmountOwed = uint(cTliq);
             VR_d.development.tokenAmountOwed = uint(dTliq);
+            sync = true;
+        }  else if(isTokenTx == true && address(token) == address(KEK) && tokenFee == false){
+            VR_c.community.tokenAmountOwed = uint(tSum);
+            sync = true;
         } else if(isTokenTx == false){
             VR_c.community.coinAmountOwed = uint(cTliq);
             VR_d.development.coinAmountOwed = uint(dTliq);
+            sync = true;
         } else {
             VR_c.community.tokenAmountOwed = uint(cTliq);
             VR_d.development.tokenAmountOwed = uint(dTliq);
+            sync = true;
         }
         if(tokenAD_V < tSum){
             tokenAD_V+=tSum;
         }
-        return true;
+        return sync;
     }
 
     function tokenizeWETH() public virtual override {
