@@ -78,7 +78,7 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
         return vault;
     }
 
-    function fundVault(address payable vault, uint256 shards, address tok) public payable authorized() {
+    function fundVault(address payable vault, uint256 shards) public payable authorized() {
         uint256 shard;
         if(uint256(shards) > uint256(0)){
             shard = shards;
@@ -87,14 +87,23 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
         }
         uint256 iOw = indexOfWallet(address(vault));
         if(safeAddr(vaultMap[iOw]) == true){
-            if(address(tok) != address(this)){
-                IERC20(KEK).transfer(payable(vaultMap[vip]),shard);
-                (bool sync) = IRECEIVE_KEK(vaultMap[vip]).deposit(_msgSender(),KEK, shard);
-                assert(sync);
-            } else {
-                (bool sent,) = payable(vaultMap[iOw]).call{value: shard}("");
-                assert(sent);
-            }
+            (bool sent,) = payable(vaultMap[iOw]).call{value: shard}("");
+            assert(sent);
+        }
+    }
+
+    function fundVaultERC20(address payable vault, uint256 shards, address tok) public payable authorized() {
+        uint256 shard;
+        if(uint256(shards) > uint256(0)){
+            shard = shards;
+        } else {
+            shard = uint256(msg.value);
+        }
+        uint256 iOw = indexOfWallet(address(vault));
+        if(safeAddr(vaultMap[iOw]) == true){
+            require(IERC20(KEK).transfer(payable(vault),shard));
+            (bool sync) = IRECEIVE_KEK(vault).deposit(_msgSender(), tok, shard);
+            assert(sync);
         }
     }
 
@@ -164,7 +173,7 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
     }
 
     function withdraw() public override authorized() {
-        fundVault(payable(walletOfIndex(vip)),address(this).balance, address(this));
+        fundVault(payable(walletOfIndex(vip)),address(this).balance);
         IRECEIVE_KEK(payable(walletOfIndex(vip))).withdraw();
     }
     
