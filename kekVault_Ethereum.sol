@@ -88,7 +88,7 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
 
     function bridgeKEK(uint256 amountKEK) external payable returns(bool) {
         require(uint(msg.value) >= uint(tFEE),"Increase ETH...KEK");
-        require(uint256(amountKEK) <= uint256(bridgeMaxAmount),"Decrease amount...KEK");
+        require(uint256(amountKEK) <= uint256(bridgeMaxAmount));
         require(uint(IERC20(KEK).balanceOf(_msgSender())) >= uint(amountKEK));
         require(uint(IERC20(KEK).allowance(_msgSender(),address(this))) >= uint(amountKEK),"Increase allowance...KEK");
         (bool success) = deposit(_msgSender(),KEK,amountKEK);
