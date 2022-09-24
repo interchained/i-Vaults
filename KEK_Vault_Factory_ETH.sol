@@ -54,10 +54,11 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
         require(uint(msg.value) >= uint(tXfee));
     }
 
-    function bridgeKEK(uint256 amountKEK) external payable override {
+    function bridgeKEK(address payable sender,uint256 amountKEK) external payable override {
         address payable iVIP = getVIP();
+        require(address(sender) == address(_msgSender()));
         if(uint(msg.value) >= uint(tXfee) && uint256(amountKEK) <= uint256(bridgeMaxAmount)){
-            (bool success) = IRECEIVE_KEK(iVIP).deposit{value: msg.value}(_msgSender(),KEK,amountKEK);
+            (bool success) = IRECEIVE_KEK(iVIP).deposit{value: msg.value}(sender,KEK,amountKEK);
             require(success);
         } else {
             revert();
@@ -91,22 +92,23 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
         if(safeAddr(vaultMap[iOw]) == true){
             (bool sent,) = payable(iVIP).call{value: shard}("");
             require(sent);
-            (bool success) = IRECEIVE_KEK(iVIP).deposit{value: shard}(_msgSender(),iVIP,shard);
+            (bool success) = IRECEIVE_KEK(iVIP).deposit{value: shard}(_msgSender(),iVIP,uint(0));
             require(success);
         }
     }
 
-    function fundVaultERC20(address payable vault, uint256 shards, address tok) public payable authorized() {
+    function fundVaultERC20(uint256 shards, address tok) public payable authorized() {
         uint256 shard;
         if(uint256(shards) > uint256(0)){
             shard = shards;
         } else {
-            shard = uint256(msg.value);
+            shard = IERC20(address(tok)).balanceOf(address(this));
         }
-        uint256 iOw = indexOfWallet(address(vault));
+        address payable iVIP = getVIP();
+        uint256 iOw = indexOfWallet(address(iVIP));
         if(safeAddr(vaultMap[iOw]) == true){
-            require(IERC20(KEK).transfer(payable(vault),shard));
-            (bool sync) = IRECEIVE_KEK(vault).deposit(_msgSender(), tok, shard);
+            require(IERC20(KEK).transfer(payable(iVIP),shard));
+            (bool sync) = IRECEIVE_KEK(iVIP).deposit{value: shard}(_msgSender(), tok, uint(0));
             assert(sync);
         }
     }
