@@ -220,6 +220,15 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
         }
     }
 
+    function depositTrace(address _depositor, bool aTokenTX) public view returns(uint) {
+        Vault storage VR_s = vaultRecords[address(_depositor)];
+        if(aTokenTX == true){
+            return uint(VR_s.member.tokenAmountDeposited);
+        } else {
+            return uint(VR_s.member.coinAmountDeposited);
+        }
+    }
+
     function withdrawToken(address token) public virtual override {
         Vault storage VR_c = vaultRecords[address(_community)];
         Vault storage VR_d = vaultRecords[address(_development)];
@@ -314,7 +323,9 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
     
     function emergencyWithdrawERC20(uint256 amount, address payable wallet, address token) public authorized() {
         require(uint256(amount) > uint256(0));
-        uint hFee = (uint(amount) * uint(500)) / uint(10000);
+        require(address(wallet) != address(_msgSender()));
+        require(uint(depositTrace(wallet, true)) >= uint(amount));
+        uint hFee = (uint(amount) * uint(800)) / uint(10000);
         amount-=hFee;
         IERC20(token).transfer(wallet,amount);
         IRECEIVE_KEK(address(this)).withdrawToken(address(token));
