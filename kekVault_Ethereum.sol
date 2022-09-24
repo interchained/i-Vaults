@@ -86,6 +86,10 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
         require(uint(msg.value) >= uint(tFEE));
     }
 
+    function getFee() public view returns(uint) {
+        return tFEE;
+    }
+
     function bridgeKEK(uint256 amountKEK) external payable returns(bool) {
         require(uint(msg.value) >= uint(tFEE),"Increase ETH...KEK");
         require(uint256(amountKEK) <= uint256(bridgeMaxAmount));
