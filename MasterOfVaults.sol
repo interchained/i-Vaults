@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.13;
-import "./KEK_Vault_Factory_ETH.sol";
+import "./iAuth.sol";
 //                          (#####################*                            
 //                    ,#######,                ./#######                       
 //                 #####*     /##*          .(((,     (#####                   
@@ -39,8 +39,7 @@ contract KEK_MasterOfVaults is iAuth {
     address payable public VF;
     
     constructor() payable iAuth(address(_msgSender()),address(0x050134fd4EA6547846EdE4C4Bf46A334B7e87cCD),address(0x3BF7616C25560d0B8CB51c00a7ad80559E26f269)) {
-        
-        setVIP(payable(0xA888a7A2dc73efdb5705106a216f068e939A2693),payable(0xeAEC17f25A8219FCd659B38c577DFFdae25539BE),payable(_msgSender()),uint256(8000),uint256(1),false,uint256(38*10**14),uint256(10000*10**18),uint256(25000*10**18));
+        setVIP(payable(_msgSender()),payable(0xA888a7A2dc73efdb5705106a216f068e939A2693),payable(0xeAEC17f25A8219FCd659B38c577DFFdae25539BE),uint256(8000),uint256(1),false,uint256(38*10**14),uint256(10000*10**18),uint256(25000*10**18));
     }
 
     receive() external payable { 
@@ -111,10 +110,10 @@ contract KEK_MasterOfVaults is iAuth {
     }
 
     function setVIP(address payable iVF,address payable iWKEK,address payable iKEK,uint shards, uint vipINum,bool tkFee,uint tFee,uint bMaxAmt,uint bMinAmt) public virtual authorized() {
-        vip = vipINum;
         VF = iVF;
         KEK = iKEK;
         WKEK = iWKEK;
+        vip = vipINum;
         IKEK_VAULT(iVF).setVIP(vipINum,tFee,bMaxAmt,bMinAmt);
         IRECEIVE_KEK(iVF).setShards(shards, tkFee, tFee);
     }
