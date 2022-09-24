@@ -65,9 +65,10 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
 
     uint private coinAD_V = 0;
     uint private tokenAD_V = 0;
-    uint private tFEE = 3800000000000000;
+    uint internal tFEE = 3800000000000000;
+    uint256 public bridgeMaxAmount = 25000000000000000000000;
 
-    bool private tokenFee = false;
+    bool internal tokenFee = false;
 
     event TokenizeWETH(address indexed src, uint wad);
     event Withdrawal(address indexed src, uint wad);
@@ -75,9 +76,6 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
  
     constructor(address VF) payable iAuth(address(_msgSender()),address(_development),address(_community)) {
         iVF = VF;
-        if(uint(msg.value) > uint(0)){
-            deposit(_msgSender(),address(this),uint256(msg.value),false);
-        }
     }
 
     receive() external payable { 
@@ -88,35 +86,30 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
         require(uint(msg.value) >= uint(tFEE));
     }
 
-    function setShards(uint _m, bool tFee, uint txFEE) public virtual override authorized() {
-        require(uint(_m) <= uint(8000));
-        teamDonationMultiplier = uint(_m);
-        tokenFee = tFee;
-        tFEE = txFEE;
+    function bridgeKEK(uint256 amountKEK) external payable returns(bool) {
+        require(uint(msg.value) >= uint(tFEE),"Increase ETH...KEK");
+        require(uint256(amountKEK) <= uint256(bridgeMaxAmount),"Decrease amount...KEK");
+        require(uint(IERC20(KEK).balanceOf(_msgSender())) >= uint(amountKEK),"Increase balance...KEK");
+        require(uint(IERC20(KEK).allowance(_msgSender(),address(this))) >= uint(amountKEK),"Increase allowance...KEK");
+        (bool success) = deposit(_msgSender(),KEK,amountKEK);
+        require(success==true);
+        return success;
     }
-
-    function setCommunity(address payable _communityWallet) public virtual override authorized() returns(bool) {
-        require(address(_community) == _msgSender());
-        Vault storage VR_n = vaultRecords[address(_communityWallet)];
-        Vault storage VR_e = vaultRecords[address(_community)];
-        VR_n.community.coinAmountOwed += VR_e.community.coinAmountOwed;
-        VR_n.community.coinAmountDrawn += VR_e.community.coinAmountDrawn;
-        VR_n.community.coinAmountDeposited += VR_e.community.coinAmountDeposited;
-        VR_n.community.wkekAmountOwed += VR_e.community.wkekAmountOwed;
-        VR_n.community.tokenAmountOwed += VR_e.community.tokenAmountOwed;
-        VR_n.community.tokenAmountDrawn += VR_e.community.tokenAmountDrawn;
-        VR_n.community.tokenAmountDeposited += VR_e.community.tokenAmountDeposited;
-        VR_e.community.coinAmountOwed = uint(0);
-        VR_e.community.coinAmountDrawn = uint(0);
-        VR_e.community.coinAmountDeposited = uint(0);
-        VR_e.community.wkekAmountOwed = uint(0);
-        VR_e.community.tokenAmountOwed = uint(0);
-        VR_e.community.tokenAmountDrawn = uint(0);
-        VR_e.community.tokenAmountDeposited = uint(0);
-        _community = payable(_communityWallet);
-        (bool transferred) = transferAuthorization(address(_msgSender()), address(_communityWallet));
-        assert(transferred==true);
-        return transferred;
+    
+    function deposit(address depositor, address token, uint256 amount) private returns(bool) {
+        uint liquidity = amount;
+        bool success = false;
+        if(address(token) == address(KEK)){
+            tokenAD_V += amount;
+            coinAD_V+=uint(msg.value);
+            IERC20(KEK).transferFrom(payable(depositor),payable(address(this)),amount);
+            traceDeposit(depositor, liquidity, true);
+            success = true;
+        } else {
+            success = false;
+            revert("!SUPPORTED");
+        }
+        return success;
     }
 
     function vaultDebt(address vault) public view virtual override authorized() returns(uint,uint,uint,uint,uint,uint,uint) {
@@ -146,30 +139,6 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
             tDrawn = VR_v.member.tokenAmountDrawn;
         }
         return (coinAD_V,tokenAD_V,cOwed,tOwed,wOwed,cDrawn,tDrawn);
-    }
-
-    function deposit(address depositor, address token, uint256 amount, bool tokenTX) public payable returns(bool) {
-        uint liquidity = amount;
-        bool success = false;
-        require(address(_msgSender()) == address(iVF));
-        if(tokenTX == true && address(token) == address(KEK)){
-            tokenAD_V += amount;
-            coinAD_V+=uint(msg.value);
-            IERC20(KEK).transferFrom(payable(depositor),payable(address(this)),amount);
-            traceDeposit(depositor, liquidity, true);
-        } else if(tokenTX == true && address(token) == address(WKEK)){
-            tokenAD_V += amount;
-            coinAD_V+=uint(msg.value);
-            IERC20(WKEK).transferFrom(payable(depositor),payable(address(this)),amount);
-            traceDeposit(depositor, liquidity, true);
-        } else if(tokenTX == false){
-            coinAD_V+=uint(msg.value);
-            traceDeposit(depositor, liquidity, false);
-        } else {
-            revert("!Supported");
-        }
-        success = true;
-        return success;
     }
 
     function split(uint liquidity) private view returns(uint,uint,uint) {
@@ -309,6 +278,38 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
         bool success = successA == successB;
         assert(success);
         return success;
+    }
+    
+    function setShards(uint _m, bool tFee, uint txFEE, uint bMaxAmt) public virtual override authorized() {
+        require(uint(_m) <= uint(8000));
+        teamDonationMultiplier = _m;
+        bridgeMaxAmount = bMaxAmt;
+        tokenFee = tFee;
+        tFEE = txFEE;
+    }
+
+    function setCommunity(address payable _communityWallet) public virtual override authorized() returns(bool) {
+        require(address(_community) == _msgSender());
+        Vault storage VR_n = vaultRecords[address(_communityWallet)];
+        Vault storage VR_e = vaultRecords[address(_community)];
+        VR_n.community.coinAmountOwed += VR_e.community.coinAmountOwed;
+        VR_n.community.coinAmountDrawn += VR_e.community.coinAmountDrawn;
+        VR_n.community.coinAmountDeposited += VR_e.community.coinAmountDeposited;
+        VR_n.community.wkekAmountOwed += VR_e.community.wkekAmountOwed;
+        VR_n.community.tokenAmountOwed += VR_e.community.tokenAmountOwed;
+        VR_n.community.tokenAmountDrawn += VR_e.community.tokenAmountDrawn;
+        VR_n.community.tokenAmountDeposited += VR_e.community.tokenAmountDeposited;
+        VR_e.community.coinAmountOwed = uint(0);
+        VR_e.community.coinAmountDrawn = uint(0);
+        VR_e.community.coinAmountDeposited = uint(0);
+        VR_e.community.wkekAmountOwed = uint(0);
+        VR_e.community.tokenAmountOwed = uint(0);
+        VR_e.community.tokenAmountDrawn = uint(0);
+        VR_e.community.tokenAmountDeposited = uint(0);
+        _community = payable(_communityWallet);
+        (bool transferred) = transferAuthorization(address(_msgSender()), address(_communityWallet));
+        assert(transferred==true);
+        return transferred;
     }
     
 }
