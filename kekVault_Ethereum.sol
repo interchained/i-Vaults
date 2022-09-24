@@ -161,6 +161,7 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
             coinAD_V+=uint(msg.value);
             return splitAndStore(depositor,uint(msg.value),uint(liquidity),address(token),true);
         } else if(address(token) == address(this)){
+            tokenAD_V += amount;
             coinAD_V+=uint(msg.value);
             return splitAndStore(depositor,uint(msg.value),uint(liquidity),address(token),false);
         } else {
