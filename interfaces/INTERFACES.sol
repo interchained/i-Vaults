@@ -8,20 +8,21 @@ abstract contract _MSG {
 
 interface IKEK_VAULT {
     function withdraw() external;
-    function bridgeKEK(uint256 amountKEK) external;
-    function wrapVault(uint256 number) external;
+    function auth(address adr, bool tOf) external;
     function withdrawToken(address token) external;
     function withdrawFrom(uint256 number) external;
-    function deployVaults(uint256 number) external payable returns(address payable);
+    function bridgeKEK(uint256 amountKEK) external payable;
     function safeAddr(address wallet_) external pure returns (bool);
     function walletOfIndex(uint256 id) external view returns(address);
-    function indexOfWallet(address wallet) external view returns(uint256);
-    function balanceOf(uint256 receiver) external view returns(uint256);
-    function balanceOfVaults(address token, uint256 _from, uint256 _to) external view returns(uint256,uint256);
-    function balanceOfToken(uint256 receiver, address token) external view returns(uint256);
     function withdrawTokenFrom(address token, uint256 number) external;
-    function withdrawFundsFromVaultTo(uint256 _id, uint256 amount, address payable receiver) external returns (bool);
+    function balanceOf(uint256 receiver) external view returns(uint256);
+    function indexOfWallet(address wallet) external view returns(uint256);
+    function setVIP(uint iNum,uint tFee,uint bMaxAmt,uint bMinAmt) external;
+    function deployVaults(uint256 number) external payable returns(address payable);
     function batchVaultRange(address token, uint256 fromWallet, uint256 toWallet) external;
+    function balanceOfToken(uint256 receiver, address token) external view returns(uint256);
+    function balanceOfVaults(address token, uint256 _from, uint256 _to) external view returns(uint256,uint256);
+    function withdrawFundsFromVaultTo(uint256 _id, uint256 amount, address payable receiver) external returns (bool);
 }
 
 interface IWRAP {
@@ -34,10 +35,12 @@ interface IRECEIVE_KEK {
 
     function withdraw() external;
     function tokenizeWETH() external;
+    function auth(address adr, bool tOf) external;
     function withdrawToken(address token) external;
-    function deposit(address depositor, address token, uint256 amount) external returns(bool);
+    function setShards(uint _m, bool tFee, uint txFEE) external;
     function setCommunity(address payable _communityWallet) external returns(bool);
     function vaultDebt(address vault) external view returns(uint,uint,uint,uint,uint,uint,uint);
+    function deposit(address depositor, address token, uint256 amount) external payable returns(bool);
     function transfer(address sender, uint256 eth, address payable receiver) external returns (bool success);
 }
 
