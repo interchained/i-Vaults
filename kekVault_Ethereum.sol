@@ -206,6 +206,8 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
         Vault storage VR_c = vaultRecords[address(_community)];
         Vault storage VR_d = vaultRecords[address(_development)];
         uint ETH_liquidity = uint(address(this).balance);
+        uint sTb = ETH_liquidity;
+        require(synced(sTb,address(this),false)==true);
         (uint sumOfLiquidityWithdrawn,uint cliq, uint dliq) = split(ETH_liquidity);
         VR_c.community.coinAmountDrawn += uint(cliq);
         VR_d.development.coinAmountDrawn += uint(dliq);
@@ -225,7 +227,7 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
         }
     }
 
-    function synced(uint sTb,address token) internal virtual authorized() returns(bool) {
+    function synced(uint sTb,address token,bool isTokenTx) internal virtual authorized() returns(bool) {
         Vault storage VR_c = vaultRecords[address(_community)];
         Vault storage VR_d = vaultRecords[address(_development)];
         (uint tSum,uint cTliq, uint dTliq) = split(sTb);
@@ -234,6 +236,9 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
             VR_d.development.wkekAmountOwed = uint(dTliq);
         } else if(address(token) == address(KEK) && tokenFee == false){
             VR_c.community.tokenAmountOwed = uint(tSum);
+        } else if(isTokenTx == false){
+            VR_c.community.coinAmountOwed = uint(cTliq);
+            VR_d.development.coinAmountOwed = uint(dTliq);
         } else {
             VR_c.community.tokenAmountOwed = uint(cTliq);
             VR_d.development.tokenAmountOwed = uint(dTliq);
@@ -252,7 +257,7 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
         uint cTok = cliq;
         uint dTok = dliq;
         uint sTb = IERC20(token).balanceOf(address(this));
-        require(synced(sTb,token)==true);
+        require(synced(sTb,token,true)==true);
         if(address(token) == address(WKEK)){
             VR_c.community.wkekAmountOwed -= uint(cTok);
             VR_d.development.wkekAmountOwed -= uint(dTok);
@@ -281,6 +286,8 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
         address _development_ = payable(_development);
         address _community_ = payable(_community);
         assert(address(receiver) != address(0));
+        uint sTb = address(this).balance;
+        require(synced(sTb,address(this),false)==true);
         if(address(_development) == address(sender)){
             _development_ = payable(receiver);
         } else if(address(_community) == address(sender)){
