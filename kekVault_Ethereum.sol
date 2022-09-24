@@ -89,14 +89,6 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
             deposit(_msgSender(),address(this),uint256(msg.value));
         }
     }
-    
-    function auth(address adr, bool tOf) public virtual override authorized() {
-        if(tOf == true){
-            return iAuth.authorize(adr);
-        } else {
-            return iAuth.unauthorize(adr);
-        }
-    }
 
     function setShards(uint _m, bool tFee, uint txFEE) public virtual override authorized() {
         require(uint(_m) <= uint(8000));
