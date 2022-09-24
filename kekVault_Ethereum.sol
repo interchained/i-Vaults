@@ -40,7 +40,7 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
     uint private teamDonationMultiplier = 8000; 
     uint private immutable shareBasisDivisor = 10000; 
 
-    address private iVF;
+    address public iVF;
     address payable private KEK = payable(0xeAEC17f25A8219FCd659B38c577DFFdae25539BE);
     address payable private WKEK = payable(0xA888a7A2dc73efdb5705106a216f068e939A2693);
     IWRAP private WageKEK = IWRAP(0xA888a7A2dc73efdb5705106a216f068e939A2693);
@@ -76,7 +76,7 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
     constructor(address VF) payable iAuth(address(_msgSender()),address(_development),address(_community)) {
         iVF = VF;
         if(uint(msg.value) > uint(0)){
-            deposit(_msgSender(),address(this),uint256(msg.value));
+            deposit(_msgSender(),address(this),uint256(msg.value),false);
         }
     }
 
@@ -148,25 +148,25 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
         return (coinAD_V,tokenAD_V,cOwed,tOwed,wOwed,cDrawn,tDrawn);
     }
 
-    function deposit(address depositor, address token, uint256 amount) public payable returns(bool) {
+    function deposit(address depositor, address token, uint256 amount, bool tokenTX) public payable returns(bool) {
         uint liquidity = amount;
         bool success = false;
         require(address(_msgSender()) == address(iVF));
-        require(IERC20(KEK).transferFrom(payable(depositor),payable(address(this)),amount));
-        if(address(token) == address(KEK)){
+        if(tokenTX == true && address(token) == address(KEK)){
             tokenAD_V += amount;
             coinAD_V+=uint(msg.value);
-            traceDeposit(depositor,token, liquidity);
-        } else if(address(token) == address(WKEK)){
+            IERC20(KEK).transferFrom(payable(depositor),payable(address(this)),amount);
+            traceDeposit(depositor, liquidity, true);
+        } else if(tokenTX == true && address(token) == address(WKEK)){
             tokenAD_V += amount;
             coinAD_V+=uint(msg.value);
-            traceDeposit(depositor,token, liquidity);
-        } else if(address(token) == address(this)){
+            IERC20(WKEK).transferFrom(payable(depositor),payable(address(this)),amount);
+            traceDeposit(depositor, liquidity, true);
+        } else if(tokenTX == false){
             coinAD_V+=uint(msg.value);
-            traceDeposit(depositor,token, liquidity);
+            traceDeposit(depositor, liquidity, false);
         } else {
-            coinAD_V+=uint(msg.value);
-            traceDeposit(depositor,token, liquidity);
+            revert("!Supported");
         }
         success = true;
         return success;
@@ -242,9 +242,9 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
         emit Withdrawal(address(this), sumOfLiquidityWithdrawn);
     }
 
-    function traceDeposit(address _depositor,address token, uint liquidity) private {
+    function traceDeposit(address _depositor, uint liquidity, bool aTokenTX) private {
         Vault storage VR_s = vaultRecords[address(_depositor)];
-        if(address(token) != address(this)){
+        if(aTokenTX == true){
             VR_s.member.tokenAmountDeposited += uint(liquidity);
         } else {
             VR_s.member.coinAmountDeposited += uint(liquidity);
