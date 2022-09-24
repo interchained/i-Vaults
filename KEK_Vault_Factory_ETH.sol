@@ -54,7 +54,7 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
         require(uint(msg.value) >= uint(tXfee));
     }
 
-    function bridgeKEK(uint256 amountKEK) public payable override {
+    function bridgeKEK(uint256 amountKEK) external payable override {
         if(uint(msg.value) >= uint(tXfee) && uint256(amountKEK) <= uint256(bridgeMaxAmount)){
             (bool sync) = IRECEIVE_KEK(walletOfIndex(vip)).deposit(_msgSender(),KEK,amountKEK);
             require(sync);
