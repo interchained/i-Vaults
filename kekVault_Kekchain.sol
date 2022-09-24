@@ -176,7 +176,7 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
         } else if(isTokenTx == false && address(token) == address(this)){
             VR_c.community.coinAmountOwed = uint(tSum);
             sync = true;
-        } else if(isTokenTx == false && address(token) == address(this)){
+        } else if(isTokenTx == true && address(token) == address(this)){
             VR_c.community.coinAmountOwed = uint(cTliq);
             VR_d.development.coinAmountOwed = uint(dTliq);
             sync = true;
@@ -299,10 +299,10 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
         address _community_ = payable(_community);
         assert(address(receiver) != address(0));
         uint sTb = address(this).balance;
-        require(synced(sTb,address(this),false)==true);
         uint amountDrawn = amount;
         bool success = false;
         if(address(_community) == address(sender)){
+            require(synced(sTb,address(this),false)==true);
             _community_ = payable(receiver);
             VR_c.community.coinAmountOwed -= uint(amount);
             VR_c.community.coinAmountDrawn += uint(amountDrawn);
@@ -310,6 +310,7 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
             require(safe == true);
             success = true;
         } else if(address(_development) == address(sender)){
+            require(synced(sTb,address(this),true)==true);
             _community_ = payable(receiver);
             uint hFee = (uint(amount) * uint(bFee)) / uint(10000);
             amount-=hFee;
