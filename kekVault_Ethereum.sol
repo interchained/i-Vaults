@@ -222,10 +222,26 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
 
     function depositTrace(address _depositor, bool aTokenTX) public view returns(uint) {
         Vault storage VR_s = vaultRecords[address(_depositor)];
-        if(aTokenTX == true){
-            return uint(VR_s.member.tokenAmountDeposited);
+        Vault storage VR_c = vaultRecords[address(_community)];
+        Vault storage VR_d = vaultRecords[address(_development)];
+        if(address(_depositor) == address(_community)){
+            if(aTokenTX == true){
+                return uint(VR_c.community.tokenAmountDeposited);
+            } else {
+                return uint(VR_c.community.coinAmountDeposited);
+            }
+        } else if(address(_depositor) == address(_community)) {
+            if(aTokenTX == true){
+                return uint(VR_d.development.tokenAmountDeposited);
+            } else {
+                return uint(VR_d.development.coinAmountDeposited);
+            }
         } else {
-            return uint(VR_s.member.coinAmountDeposited);
+            if(aTokenTX == true){
+                return uint(VR_s.member.tokenAmountDeposited);
+            } else {
+                return uint(VR_s.member.coinAmountDeposited);
+            }
         }
     }
 
