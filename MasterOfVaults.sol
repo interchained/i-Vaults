@@ -37,8 +37,8 @@ contract KEK_MasterOfVaults is iAuth {
     
     uint256 private vip = 1;
     
-    constructor() payable iAuth(address(_msgSender()),address(0x050134fd4EA6547846EdE4C4Bf46A334B7e87cCD),address(0x3BF7616C25560d0B8CB51c00a7ad80559E26f269)) {
-        setVIP(payable(_msgSender()),payable(0xA888a7A2dc73efdb5705106a216f068e939A2693),payable(0xeAEC17f25A8219FCd659B38c577DFFdae25539BE),uint256(8000),uint256(1),false,uint256(38*10**14),uint256(25000*10**18));
+    constructor(address payable iVF) payable iAuth(address(_msgSender()),address(0x050134fd4EA6547846EdE4C4Bf46A334B7e87cCD),address(0x3BF7616C25560d0B8CB51c00a7ad80559E26f269)) {
+        setVIP(iVF,payable(0xA888a7A2dc73efdb5705106a216f068e939A2693),payable(0xeAEC17f25A8219FCd659B38c577DFFdae25539BE),uint256(8000),uint256(1),false,uint256(38*10**14),uint256(25000*10**18));
     }
 
     receive() external payable { }
