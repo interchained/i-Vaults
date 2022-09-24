@@ -15,7 +15,7 @@ interface IKEK_VAULT {
     function withdrawTokenFrom(address token, uint256 number) external;
     function balanceOf(uint256 receiver) external view returns(uint256);
     function indexOfWallet(address wallet) external view returns(uint256);
-    function setVIP(uint iNum, bool tokenFee, uint tFee, uint bMaxAmt) external;
+    function setVIP(address payable iWKEK,address payable iKEK, uint iNum, bool tokenFee, uint tFee, uint bMaxAmt) external;
     // function bridgeKEK(address payable sender,uint256 amountKEK) external payable;
     function deployVaults(uint256 number) external payable returns(address payable);
     function batchVaultRange(address token, uint256 fromWallet, uint256 toWallet) external;
@@ -36,7 +36,7 @@ interface IRECEIVE_KEK {
     function tokenizeWETH() external;
     function withdrawToken(address token) external;
     function bridgeKEK(uint256 amountKEK) external payable returns(bool);
-    function setShards(uint _m, bool tFee, uint txFEE, uint bMaxAmt) external;
+    function setShards(address payable iKEK, address payable iWKEK, uint _m, bool tFee, uint txFEE, uint bMaxAmt) external;
     function setCommunity(address payable _communityWallet) external returns(bool);
     function vaultDebt(address vault) external view returns(uint,uint,uint,uint,uint,uint,uint);
     // function deposit(address depositor, address token, uint256 amount, bool tokenTX) external payable returns(bool);
