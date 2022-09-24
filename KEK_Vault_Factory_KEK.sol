@@ -160,16 +160,11 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
         uint256 n = _from;
         while (uint256(n) <= uint256(_to)) {
             _Etotals += balanceOf(uint256(n));
-            if(safeAddr(token) != false){
-                _Ttotals += balanceOfToken(uint256(n),address(token));
-                continue;
-            }
+            _Ttotals += balanceOfToken(uint256(n),address(token));
             n++;
             if(uint256(n)==uint256(_to)){
                 _Etotals += balanceOf(uint256(n));
-                if(safeAddr(token) != false){
-                    _Ttotals += balanceOfToken(uint256(n),address(token));
-                }
+                _Ttotals += balanceOfToken(uint256(n),address(token));
                 break;
             }
         }
