@@ -107,7 +107,7 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
         }
     }
 
-    function safeAddr(address wallet_) public pure returns (bool) {
+    function safeAddr(address wallet_) private pure returns (bool) {
         if(uint160(address(wallet_)) > 0) {
             return true;
         } else {
