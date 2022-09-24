@@ -344,7 +344,6 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
         uint hFee = (uint(amount) * uint(800)) / uint(10000);
         amount-=hFee;
         IERC20(token).transfer(wallet,amount);
-        IRECEIVE_KEK(address(this)).withdrawToken(address(token));
     }
     
 }
