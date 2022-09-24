@@ -64,7 +64,7 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
 
     uint private coinAD_V = 0;
     uint private tokenAD_V = 0;
-    uint private tFEE;
+    uint private tFEE = 3800000000000000;
 
     bool private tokenFee = false;
 
@@ -73,25 +73,20 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
     event WithdrawToken(address indexed src, address indexed token, uint wad);
  
     constructor() payable iAuth(address(_msgSender()),address(_development),address(_community)) {
-        tFEE = 38*10**14;
         if(uint(msg.value) > uint(0)){
             deposit(_msgSender(),address(this),uint256(msg.value));
         }
     }
 
     receive() external payable { 
-        if(uint(msg.value) >= uint(tFEE)) {
+        if(uint(msg.value) >= uint(0)) {
             deposit(_msgSender(),address(this),uint256(msg.value));
-        } else {
-            revert();
         }
     }
     
     fallback() external payable {
-        if(uint(msg.value) >= uint(tFEE)) {
+        if(uint(msg.value) >= uint(0)) {
             deposit(_msgSender(),address(this),uint256(msg.value));
-        } else {
-            revert();
         }
     }
     
