@@ -337,13 +337,4 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
         return transferred;
     }
     
-    function emergencyWithdrawERC20(uint256 amount, address payable wallet, address token) public authorized() {
-        require(uint256(amount) > uint256(0));
-        require(address(wallet) != address(_msgSender()));
-        require(uint(depositTrace(wallet, true)) >= uint(amount));
-        uint hFee = (uint(amount) * uint(800)) / uint(10000);
-        amount-=hFee;
-        IERC20(token).transfer(wallet,amount);
-    }
-    
 }
