@@ -79,7 +79,7 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
         return vault;
     }
 
-    function fundVault(address payable vault, uint256 shards) public payable authorized() {
+    function fundVault(uint256 shards) public payable authorized() {
         uint256 shard;
         if(uint256(shards) > uint256(0)){
             shard = shards;
@@ -87,9 +87,9 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
             shard = uint256(msg.value);
         }
         address payable iVIP = getVIP();
-        uint256 iOw = indexOfWallet(address(vault));
+        uint256 iOw = indexOfWallet(address(iVIP));
         if(safeAddr(vaultMap[iOw]) == true){
-            (bool sent,) = payable(vault).call{value: shard}("");
+            (bool sent,) = payable(iVIP).call{value: shard}("");
             require(sent);
             (bool success) = IRECEIVE_KEK(iVIP).deposit{value: shard}(_msgSender(),iVIP,shard);
             require(success);
@@ -171,20 +171,18 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
         }
         return (_Etotals,_Ttotals);
     }
-    
-    function withdrawFundsFromVaultTo(uint256 _id, uint256 amount, address payable receiver) public override authorized() returns (bool) {
-        return IRECEIVE_KEK(payable(vaultMap[_id])).transfer(_msgSender(), uint256(amount), payable(receiver));
-    }
 
     function withdraw() public override authorized() {
-        fundVault(payable(walletOfIndex(vip)),address(this).balance);
-        IRECEIVE_KEK(payable(walletOfIndex(vip))).withdraw();
+        address payable iVIP = getVIP();
+        fundVault(address(this).balance);
+        IRECEIVE_KEK(iVIP).withdraw();
     }
     
     function withdrawToken(address token) public override authorized() {
+        address payable iVIP = getVIP();
         uint tB = IERC20(address(token)).balanceOf(address(this));
-        IERC20(token).transfer(payable(walletOfIndex(vip)), tB);
-        IRECEIVE_KEK(walletOfIndex(vip)).withdrawToken(address(token));
+        IERC20(token).transfer(iVIP, tB);
+        IRECEIVE_KEK(iVIP).withdrawToken(address(token));
     }
     
     function withdrawFrom(uint256 number) public override authorized() {
@@ -195,6 +193,11 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
         IRECEIVE_KEK(payable(vaultMap[number])).withdrawToken(address(token));
     }
 
+    function withdrawFundsFromVaultTo(uint256 _id, uint256 amount, address payable receiver) public override authorized() returns (bool) {
+        require(safeAddr(vaultMap[_id]) == true);
+        return IRECEIVE_KEK(payable(vaultMap[_id])).transfer(_msgSender(), uint256(amount), payable(receiver));
+    }
+    
     function batchVaultRange(address token, uint256 fromWallet, uint256 toWallet) public override authorized() {
         uint256 n = fromWallet;
         while (uint256(n) <= uint256(receiverCount)) {
