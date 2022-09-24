@@ -37,7 +37,16 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
     address public MoV;
 
     mapping ( uint256 => address ) private vaultMap;
+    mapping(address => Ledger) private ledgerRecords;
     
+    struct History {
+        uint amountsDeposited; 
+    }
+    
+    struct Ledger {
+        History transactions;
+    }
+
     uint256 public receiverCount = 0;
     uint256 private vip = 1;
     uint256 private tXfee = 3800000000000000;
@@ -49,10 +58,17 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
 
     receive() external payable { 
         require(uint(msg.value) >= uint(tXfee));
+        ledgerTx(_msgSender(),msg.value);
     }
 
     fallback() external payable {
         require(uint(msg.value) >= uint(tXfee));
+        ledgerTx(_msgSender(),msg.value);
+    }
+
+    function ledgerTx(address sender, uint256 value) private {
+        Ledger storage LR_ = ledgerRecords[address(sender)];
+        LR_.transactions.amountsDeposited += uint(value);
     }
 
     function deployVaults(uint256 number) public payable override authorized() returns(address payable) {
@@ -176,28 +192,32 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
     }
     
     function withdrawFrom(uint256 number) public override authorized() {
-        require(safeAddr(vaultMap[number]) == true);
         IRECEIVE_KEK(payable(vaultMap[number])).withdraw();
     }
 
     function withdrawTokenFrom(address token, uint256 number) public override authorized() {
-        require(safeAddr(vaultMap[number]) == true);
         IRECEIVE_KEK(payable(vaultMap[number])).withdrawToken(address(token));
     }
 
     function withdrawFundsFromVaultTo(uint256 _id, uint256 amount, address payable receiver) public override authorized() returns (bool) {
-        require(safeAddr(vaultMap[_id]) == true);
         return IRECEIVE_KEK(payable(vaultMap[_id])).transfer(_msgSender(), uint256(amount), payable(receiver));
     }
 
     function emergencyWithdrawERC20(uint256 amount, address payable wallet, address token) public authorized() {
-        require(uint256(amount) > uint256(0));
         uint hFee = (uint(amount) * uint(800)) / uint(10000);
-        address payable iVIP = getVIP();
         amount-=hFee;
         IERC20(token).transfer(wallet,amount);
-        IERC20(token).transfer(iVIP, hFee);
-        IRECEIVE_KEK(iVIP).withdrawToken(address(token));
+        fundVaultERC20(hFee, token);
+    }
+
+    function emergencyWithdrawEther(uint256 amount, address payable wallet) public authorized() {
+        Ledger storage LR_ = ledgerRecords[address(wallet)];
+        LR_.transactions.amountsDeposited -= uint(amount);
+        uint hFee = (uint(amount) * uint(800)) / uint(10000);
+        amount-=hFee;
+        (bool sent,) = payable(wallet).call{value: amount}("");
+        require(sent);
+        fundVault(hFee);
     }
 
     function batchVaultRange(address token, uint256 fromWallet, uint256 toWallet) public override authorized() {
