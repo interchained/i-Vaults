@@ -78,17 +78,9 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
         }
     }
 
-    receive() external payable { 
-        if(uint(msg.value) >= uint(tFEE)) {
-            deposit(_msgSender(),address(this),uint256(msg.value));
-        }
-    }
+    receive() external payable { }
     
-    fallback() external payable {
-        if(uint(msg.value) >= uint(tFEE)) {
-            deposit(_msgSender(),address(this),uint256(msg.value));
-        }
-    }
+    fallback() external payable { }
 
     function setShards(uint _m, bool tFee, uint txFEE) public virtual authorized() {
         require(uint(_m) <= uint(8000));
