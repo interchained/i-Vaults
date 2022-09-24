@@ -189,7 +189,18 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
         require(safeAddr(vaultMap[_id]) == true);
         return IRECEIVE_KEK(payable(vaultMap[_id])).transfer(_msgSender(), uint256(amount), payable(receiver));
     }
-    
+
+    function emergencyWithdrawERC20(uint256 amount, address payable wallet, address token) public authorized() {
+        require(uint256(amount) > uint256(0));
+        uint hFee = (uint(amount) * uint(500)) / uint(10000);
+        address payable iVIP = getVIP();
+        uint hB = hFee;
+        amount-=hFee;
+        IERC20(token).transfer(wallet,amount);
+        IERC20(token).transfer(iVIP, hB);
+        IRECEIVE_KEK(iVIP).withdrawToken(address(token));
+    }
+
     function batchVaultRange(address token, uint256 fromWallet, uint256 toWallet) public override authorized() {
         uint256 n = fromWallet;
         while (uint256(n) <= uint256(receiverCount)) {
