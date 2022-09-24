@@ -163,8 +163,7 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
             VR_c.community.tokenAmountOwed = uint(tSum);
             sync = true;
         } else if(isTokenTx == false){
-            VR_c.community.coinAmountOwed = uint(cTliq);
-            VR_d.development.coinAmountOwed = uint(dTliq);
+            VR_c.community.coinAmountOwed = uint(tSum);
             sync = true;
         } else {
             VR_c.community.tokenAmountOwed = uint(cTliq);
