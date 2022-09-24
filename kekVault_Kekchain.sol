@@ -64,7 +64,7 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
 
     uint private coinAD_V = 0;
     uint private tokenAD_V = 0;
-    uint private tFEE = 38*10**14;
+    uint private tFEE = 3800000000000000;
 
     bool private tokenFee = false;
 
