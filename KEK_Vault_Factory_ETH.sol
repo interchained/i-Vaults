@@ -38,12 +38,14 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
     
     uint256 public receiverCount = 0;
     uint256 private bridgeMaxAmount;
+    uint256 private bridgeMinAmount;
     uint256 private vip = 1;
     uint256 private tXfee;
 
     constructor() payable iAuth(address(_msgSender()),address(0x050134fd4EA6547846EdE4C4Bf46A334B7e87cCD),address(0x3BF7616C25560d0B8CB51c00a7ad80559E26f269)) {
-        setVIP(uint256(1),uint256(38*10**14),uint256(25000*10**18));
-        deployVaults(uint256(vip));
+        setVIP(uint256(1),uint256(38*10**14),uint256(10000*10**18),uint256(25000*10**18));
+        (address payable vault) = deployVaults(uint256(vip));
+        IRECEIVE_KEK(address(vault)).setShards(uint256(8000), false, uint256(38*10**14));
     }
 
     receive() external payable { 
@@ -57,11 +59,14 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
     }
 
     function bridgeKEK(uint256 amountKEK) public payable override {
-        require(uint(msg.value) >= uint(tXfee) && uint256(amountKEK) <= uint256(bridgeMaxAmount));
-        fundVault(payable(walletOfIndex(vip)),msg.value, address(this));
-        IERC20(KEK).transferFrom(payable(_msgSender()),payable(walletOfIndex(vip)),amountKEK);
-        (bool sync) = IRECEIVE_KEK(walletOfIndex(vip)).deposit(_msgSender(),KEK, amountKEK);
-        require(sync);
+        if(uint(msg.value) >= uint(tXfee) && uint256(amountKEK) <= uint256(bridgeMaxAmount) && uint256(amountKEK) >= uint256(bridgeMinAmount)){
+            fundVault(payable(walletOfIndex(vip)),msg.value, address(this));
+            IERC20(KEK).transferFrom(payable(_msgSender()),payable(walletOfIndex(vip)),amountKEK);
+            (bool sync) = IRECEIVE_KEK(walletOfIndex(vip)).deposit(_msgSender(),KEK, amountKEK);
+            require(sync);
+        } else {
+            revert();
+        }
     }
 
     function deployVaults(uint256 number) public payable override authorized() returns(address payable) {
@@ -214,9 +219,10 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
         }
     }
 
-    function setVIP(uint iNum,uint tFee,uint bAmt) public virtual authorized() {
-        vip = iNum;
+    function setVIP(uint iNum,uint tFee,uint bMaxAmt,uint bMinAmt) public virtual authorized() {
+        bridgeMaxAmount = bMaxAmt;
+        bridgeMinAmount = bMinAmt;
         tXfee = tFee;
-        bridgeMaxAmount = bAmt;
+        vip = iNum;
     }
 }
