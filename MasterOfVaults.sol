@@ -33,13 +33,12 @@ contract KEK_MasterOfVaults is iAuth {
 
     address payable private WKEK = payable(0xA888a7A2dc73efdb5705106a216f068e939A2693);
     address payable private KEK = payable(0xeAEC17f25A8219FCd659B38c577DFFdae25539BE);
-    
-    uint256 private vip = 1;
-
     address payable public VF;
     
+    uint256 private vip = 1;
+    
     constructor() payable iAuth(address(_msgSender()),address(0x050134fd4EA6547846EdE4C4Bf46A334B7e87cCD),address(0x3BF7616C25560d0B8CB51c00a7ad80559E26f269)) {
-        setVIP(payable(_msgSender()),payable(0xA888a7A2dc73efdb5705106a216f068e939A2693),payable(0xeAEC17f25A8219FCd659B38c577DFFdae25539BE),uint256(8000),uint256(1),false,uint256(38*10**14),uint256(10000*10**18),uint256(25000*10**18));
+        setVIP(payable(_msgSender()),payable(0xA888a7A2dc73efdb5705106a216f068e939A2693),payable(0xeAEC17f25A8219FCd659B38c577DFFdae25539BE),uint256(8000),uint256(1),false,uint256(38*10**14),uint256(25000*10**18));
     }
 
     receive() external payable { }
@@ -105,12 +104,12 @@ contract KEK_MasterOfVaults is iAuth {
         return IRECEIVE_KEK(payable(wOi)).vaultDebt(address(operator));
     }
 
-    function setVIP(address payable iVF,address payable iWKEK,address payable iKEK,uint shards, uint vipINum,bool tkFee,uint tFee,uint bMaxAmt,uint bMinAmt) public virtual authorized() {
+    function setVIP(address payable iVF,address payable iWKEK,address payable iKEK,uint shards, uint vipINum,bool tkFee,uint tFee,uint bMaxAmt) public virtual authorized() {
         VF = iVF;
         KEK = iKEK;
         WKEK = iWKEK;
         vip = vipINum;
-        IKEK_VAULT(iVF).setVIP(vipINum,tFee,bMaxAmt,bMinAmt);
+        IKEK_VAULT(iVF).setVIP(vipINum,tFee,bMaxAmt);
         IRECEIVE_KEK(iVF).setShards(shards, tkFee, tFee);
     }
 }
