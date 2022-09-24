@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.13;
-import "./iAuth.sol";
+import "./KEK_Vault_Factory_KEK.sol";
+
 //                          (#####################*                            
 //                    ,#######,                ./#######                       
 //                 #####*     /##*          .(((,     (#####                   
@@ -37,14 +38,17 @@ contract KEK_MasterOfVaults is iAuth {
     
     uint256 private vip = 1;
     
-    constructor(address payable iVF) payable iAuth(address(_msgSender()),address(0x050134fd4EA6547846EdE4C4Bf46A334B7e87cCD),address(0x3BF7616C25560d0B8CB51c00a7ad80559E26f269)) {
-        setVIP(iVF,payable(0xA888a7A2dc73efdb5705106a216f068e939A2693),payable(0xeAEC17f25A8219FCd659B38c577DFFdae25539BE),uint256(1),false,uint256(38*10**14),uint256(25000*10**18));
+    constructor(address payable iVF_) payable iAuth(address(_msgSender()),address(0x050134fd4EA6547846EdE4C4Bf46A334B7e87cCD),address(0x3BF7616C25560d0B8CB51c00a7ad80559E26f269)) {
+        setVIP(iVF_,payable(0xA888a7A2dc73efdb5705106a216f068e939A2693),payable(0xeAEC17f25A8219FCd659B38c577DFFdae25539BE),uint256(1),false,uint256(38*10**14),uint256(25000*10**18));
     }
 
     receive() external payable { }
 
     fallback() external payable { }
 
+    // function deployVaultFactory() public returns(address payable) {
+    //     return payable(address(new KEK_Vault_Factory()));
+    // }
     function deployVaults(uint256 number) public payable authorized() returns(address payable) {
         (address payable vault) = IKEK_VAULT(VF).deployVaults(number);
         return vault;
