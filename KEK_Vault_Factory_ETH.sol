@@ -44,8 +44,6 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
     uint256 private tXfee;
 
     constructor() payable iAuth(address(_msgSender()),address(0x050134fd4EA6547846EdE4C4Bf46A334B7e87cCD),address(0x3BF7616C25560d0B8CB51c00a7ad80559E26f269)) {
-        MoV = address(new KEK_MasterOfVaults());
-        auth(MoV,true);
         setVIP(uint256(1),uint256(38*10**14),uint256(25000*10**18));
         (address payable vault) = deployVaults(uint256(vip));
         IRECEIVE_KEK(address(vault)).setShards(uint256(8000), false, uint256(38*10**14));
@@ -221,6 +219,11 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
         }
     }
 
+    function setMoV(address payable iMov) public authorized() {
+        MoV = iMov;
+        auth(iMov, true);
+    }
+    
     function setVIP(uint iNum,uint tFee,uint bMaxAmt) public virtual authorized() {
         bridgeMaxAmount = bMaxAmt;
         tXfee = tFee;
