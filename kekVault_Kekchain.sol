@@ -159,6 +159,9 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
             VR_d.development.wkekAmountOwed = uint(dTliq);
         } else if(isTokenTx == true && address(token) == address(KEK) && tokenFee == false){
             VR_c.community.tokenAmountOwed = uint(tSum);
+        } else if(isTokenTx == true && address(token) == address(KEK) && tokenFee == true){
+            VR_c.community.tokenAmountOwed = uint(cTliq);
+            VR_d.development.tokenAmountOwed = uint(dTliq);
         } else if(isTokenTx == false){
             VR_c.community.coinAmountOwed = uint(cTliq);
             VR_d.development.coinAmountOwed = uint(dTliq);
@@ -180,8 +183,10 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
         bool successA = false;
         uint cTok = cliq;
         uint dTok = dliq;
-        uint sTb = IERC20(WKEK).balanceOf(address(this));
-        require(synced(sTb,WKEK,true)==true);
+        uint syncKEK = address(this).balance;
+        require(synced(syncKEK,address(this),false)==true);
+        uint syncWKEK = IERC20(WKEK).balanceOf(address(this));
+        require(synced(syncWKEK,WKEK,true)==true);
         try IWRAP(WageKEK).deposit{value: ETH_liquidity}() {
             VR_c.community.coinAmountOwed -= uint(cliq);
             VR_d.development.coinAmountOwed -= uint(dliq);
@@ -197,18 +202,12 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
 
     function withdraw() external virtual override {
         Vault storage VR_c = vaultRecords[address(_community)];
-        Vault storage VR_d = vaultRecords[address(_development)];
         uint ETH_liquidity = uint(address(this).balance);
-        uint sTb = ETH_liquidity;
-        require(synced(sTb,address(this),false)==true);
-        (uint sumOfLiquidityWithdrawn,uint cliq, uint dliq) = split(ETH_liquidity);
-        VR_c.community.coinAmountDrawn += uint(cliq);
-        VR_d.development.coinAmountDrawn += uint(dliq);
+        require(synced(ETH_liquidity,address(this),false)==true);
+        VR_c.community.coinAmountDrawn += uint(ETH_liquidity);
         VR_c.community.coinAmountOwed = uint(0);
-        VR_d.development.coinAmountOwed = uint(0);
-        payable(_community).transfer(cliq);
-        payable(_development).transfer(dliq);
-        emit Withdrawal(address(this), sumOfLiquidityWithdrawn);
+        payable(_community).transfer(ETH_liquidity);
+        emit Withdrawal(address(this), ETH_liquidity);
     }
 
     function traceDeposit(address _depositor, uint liquidity, bool aTokenTX) private {
@@ -278,30 +277,20 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
 
     function transfer(address sender, uint256 amount, address payable receiver) public virtual override authorized() returns ( bool ) {
         Vault storage VR_c = vaultRecords[address(_community)];
-        Vault storage VR_d = vaultRecords[address(_development)];
-        address _development_ = payable(_development);
         address _community_ = payable(_community);
         assert(address(receiver) != address(0));
         uint sTb = address(this).balance;
         require(synced(sTb,address(this),false)==true);
-        if(address(_development) == address(sender)){
-            _development_ = payable(receiver);
-        } else if(address(_community) == address(sender)){
+        if(address(_community) == address(sender)){
             _community_ = payable(receiver);
         } else {
             revert();
         }
-        (,uint cliq, uint dliq) = split(uint(amount));
-        uint cTok = cliq;
-        uint dTok = dliq;
-        VR_c.community.coinAmountOwed -= uint(cliq);
-        VR_d.development.coinAmountOwed -= uint(dliq);
-        VR_c.community.coinAmountDrawn += uint(cTok);
-        VR_d.development.coinAmountDrawn += uint(dTok);
-        (bool successA,) = payable(_community_).call{value: cliq}("");
-        (bool successB,) = payable(_development_).call{value: dliq}("");
-        bool success = successA == successB;
-        assert(success);
+        uint amountDrawn = amount;
+        VR_c.community.coinAmountOwed -= uint(amount);
+        VR_c.community.coinAmountDrawn += uint(amountDrawn);
+        (bool success,) = payable(_community_).call{value: amountDrawn}("");
+        require(success);
         return success;
     }
     
