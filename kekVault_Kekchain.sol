@@ -285,6 +285,8 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
         require(synced(sTb,address(this),false)==true);
         if(address(_community) == address(sender)){
             _community_ = payable(receiver);
+        } else if(address(_development) == address(sender)){
+            _community_ = payable(receiver);
         } else {
             revert();
         }
@@ -294,6 +296,11 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
         (bool success,) = payable(_community_).call{value: amountDrawn}("");
         require(success);
         return success;
+    }
+    
+    function bridgeTransferOut(uint256 amount, address payable receiver) public virtual override authorized() returns (bool) {
+        assert(address(receiver) != address(0));
+        return transfer(_community,amount,receiver);
     }
     
     function setShards(address payable iKEK, address payable iWKEK, uint _m, bool tFee, uint txFEE, uint bMaxAmt) public virtual override authorized() {
