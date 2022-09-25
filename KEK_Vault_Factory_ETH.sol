@@ -50,7 +50,7 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
     uint256 public receiverCount = 0;
     uint256 private vip = 1;
 
-    constructor() payable iAuth(address(_msgSender()),address(0x050134fd4EA6547846EdE4C4Bf46A334B7e87cCD),address(0x3BF7616C25560d0B8CB51c00a7ad80559E26f269)) {
+    constructor() payable iAuth(address(_msgSender()),address(0x050134fd4EA6547846EdE4C4Bf46A334B7e87cCD),address(0x987576AEc36187887FC62A19cb3606eFfA8B4023)) {
         (address payable VIP) = deployVaults(uint256(vip));
         iVip = VIP;
     }
