@@ -32,7 +32,7 @@ import "./iAuth.sol";
 contract KEK_Vault is iAuth, IRECEIVE_KEK {
     
     address payable private _development = payable(0x050134fd4EA6547846EdE4C4Bf46A334B7e87cCD);
-    address payable private _community = payable(0x3BF7616C25560d0B8CB51c00a7ad80559E26f269);
+    address payable private _community = payable(0x987576AEc36187887FC62A19cb3606eFfA8B4023);
 
     string public name = unicode"☦🔒";
     string public symbol = unicode"☦🔑";
@@ -68,7 +68,7 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
     uint private coinAD_V = 0;
     uint private tokenAD_V = 0;
     uint internal tFEE = 3800000000000000;
-    uint256 public bridgeMaxAmount = 25000000000000000000000;
+    uint256 public bridgeMaxAmount = 250000000000000000000000;
     uint256 public bridgeBulkMaxAmount = 1000000000000000000000000;
 
     bool internal tokenFee = false;
