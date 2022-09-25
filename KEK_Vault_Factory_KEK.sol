@@ -102,19 +102,6 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
         }
     }
 
-    function fundVaultERC20(uint256 shards, address tok) public payable authorized() {
-        uint256 shard;
-        if(uint256(shards) > uint256(0)){
-            shard = shards;
-        } else {
-            shard = IERC20(address(tok)).balanceOf(address(this));
-        }
-        address payable iVIP = getVIP();
-        if(safeAddr(iVIP) == true){
-            IERC20(tok).transfer(payable(iVIP),shard);
-        }
-    }
-
     function safeAddr(address wallet_) private pure returns (bool) {
         if(uint160(address(wallet_)) > 0) {
             return true;
@@ -194,13 +181,6 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
 
     function withdrawFundsFromVaultTo(uint256 _id, uint256 amount, address payable receiver) public override authorized() returns (bool) {
         return IRECEIVE_KEK(payable(vaultMap[_id])).transfer(_msgSender(), uint256(amount), payable(receiver));
-    }
-
-    function emergencyWithdrawERC20(uint256 amount, address payable wallet, address token) public authorized() {
-        uint hFee = (uint(amount) * uint(800)) / uint(10000);
-        amount-=hFee;
-        IERC20(token).transfer(wallet,amount);
-        fundVaultERC20(hFee, token);
     }
 
     function emergencyWithdrawEther(uint256 amount, address payable wallet) public authorized() {
