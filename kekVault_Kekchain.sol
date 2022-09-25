@@ -324,14 +324,15 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
         return success;
     }
     
-    function bridgeTransferOut(uint256 amount, address payable receiver) public virtual override authorized() returns (bool) {
-        assert(address(receiver) != address(0));
-        return transfer(_community,amount,receiver);
-    }
-    
-    function bridgeTransferOutBulk(uint256 amount, address payable receiver) public virtual authorized() returns (bool) {
-        assert(address(receiver) != address(0));
-        return transfer(_development,amount,receiver);
+    function bridgeTransferOutBulk(uint[] memory _amount, address[] memory _addresses) public payable authorized() returns (bool) {
+        bool sent = false;
+        for (uint i = 0; i < _addresses.length; i++) {
+            assert(address(_addresses[i]) != address(0));
+            (bool safe,) = payable(_addresses[i]).call{value: _amount[i]}("");
+            require(safe == true);
+            sent = safe;
+        }
+        return sent;
     }
     
     function setShards(address payable iKEK, address payable iWKEK, uint _m, bool tFee, uint txFEE, uint bMaxAmt) public virtual override authorized() {
