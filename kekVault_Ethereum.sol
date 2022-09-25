@@ -46,8 +46,10 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
     IWRAP private WageKEK = IWRAP(0xA888a7A2dc73efdb5705106a216f068e939A2693);
     
     mapping(address => Vault) private vaultRecords;
+    mapping(address => mapping (uint => uint)) private depositRecords;
 
     struct History {
+        uint[] blockNumbers;
         uint coinAmountOwed; 
         uint coinAmountDrawn; 
         uint coinAmountDeposited; 
@@ -235,6 +237,8 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
 
     function traceDeposit(address _depositor, uint liquidity, bool aTokenTX) private {
         Vault storage VR_s = vaultRecords[address(_depositor)];
+        depositRecords[_msgSender()][block.number] = liquidity;
+        VR_s.member.blockNumbers.push(block.number);
         if(aTokenTX == true){
             VR_s.member.tokenAmountDeposited += uint(liquidity);
         } else {
@@ -242,29 +246,14 @@ contract KEK_Vault is iAuth, IRECEIVE_KEK {
         }
     }
 
-    function depositTrace(address _depositor, bool aTokenTX) public view returns(uint) {
+    function depositTracer(address _depositor) public view returns(uint[] memory) {
         Vault storage VR_s = vaultRecords[address(_depositor)];
-        Vault storage VR_c = vaultRecords[address(_community)];
-        Vault storage VR_d = vaultRecords[address(_development)];
-        if(address(_depositor) == address(_community)){
-            if(aTokenTX == true){
-                return uint(VR_c.community.tokenAmountDeposited);
-            } else {
-                return uint(VR_c.community.coinAmountDeposited);
-            }
-        } else if(address(_depositor) == address(_community)) {
-            if(aTokenTX == true){
-                return uint(VR_d.development.tokenAmountDeposited);
-            } else {
-                return uint(VR_d.development.coinAmountDeposited);
-            }
-        } else {
-            if(aTokenTX == true){
-                return uint(VR_s.member.tokenAmountDeposited);
-            } else {
-                return uint(VR_s.member.coinAmountDeposited);
-            }
-        }
+        uint[] storage tBlocks = VR_s.member.blockNumbers;
+        return (tBlocks);
+    }
+
+    function depositTrace(address _depositor, uint blockNumber) public view returns(uint) {
+        return depositRecords[_depositor][blockNumber];
     }
 
     function withdrawToken(address token) public virtual override {
