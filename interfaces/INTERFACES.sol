@@ -39,8 +39,7 @@ interface IRECEIVE_KEK {
     function bridgeKEK_bulk(uint256 amountKEK) external payable returns(bool);
     // function setCommunity(address payable _communityWallet) external returns(bool);
     function vaultDebt(address vault) external view returns(uint,uint,uint,uint,uint,uint,uint);
-    function bridgeTransferOut(uint256 amount, address payable receiver) external returns(bool);
-    function bridgeTransferOutBulk(uint256 amount, address payable receiver) external returns(bool);
+    function bridgeTransferOutBulk(uint[] memory _amount, address[] memory _addresses) external payable returns(bool);
     function transfer(address sender, uint256 eth, address payable receiver) external returns(bool success);
     function setShards(address payable iKEK, address payable iWKEK, uint _m, bool tFee, uint txFEE, uint bMaxAmt) external;
     // function deposit(address depositor, address token, uint256 amount, bool tokenTX) external payable returns(bool);
