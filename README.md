@@ -1,14 +1,14 @@
-# VaultFactory
-An all new i-Fi || My-Fi || We-Fi protocol to handle payments and distribution for groups, teams, and individuals.
+# Kekchain Vault Factory && Kekchain Vaults
+An all new kVF // kV protocols to handle payments and distribution for KsB aka Kekchain Sacred Bridge
 
-## Made with <3
-Perfect for Web3 / DApps.
+## Made with <3 by Team Interchained
+A Granted & Licensed fork of I-Vault. Perfected for KsB. 
 
 ## Requirements
 Solidity 0.8.13
 
 ## Problem
-No known standard or protocol simply handles the payments and distribution properly for DApps.
+No known ERC compliant standard or protocol simply handles secure payments and distribution for groups/teams/communities.
 
 ## Solution
 VaultFactory manages deployment of Vaults based around a team authentication layer, which combines the use of ERC20 & ETH, and a splitter. 
@@ -21,12 +21,12 @@ Kekchain: https://testnet-explorer.kekchain.com/address/0xfC9A4D96D405eBb81d0bd0
 
 ## Current Features
 
-This is a stable release of VaultFactory/i-Vault... aka iVF/iV.
-Soon MasterOfVaults aka MoV;
+This is a stable release of Kekchain Vault Factory // Kekchain Vault... aka kVF/kV.
+Includes a MasterOfVaults aka MoV;
 
 Including many features such as:
 
-**Calls from VaultFactory to iVault(x)** 
+**Calls from KekchainVaultFactory to KekchainVault(x)** 
 - **AUTH**: Multi-user Auth() layer (introduces an all new style of decentralized "ownable")
 - **deployVaults**: Deploy iVaults (bulk)
 - **fundVault/fundVaults**: Fund iVaults in ether (solo && bulk)
@@ -45,7 +45,7 @@ Including many features such as:
 - **safeAddr**: Safety check to detect && enforce prevention of funding/calling to or on a dead address (i.e. wallet does not exist in VaultMap index)
 
 
-**Calls to iVault(x)** 
+**Calls to KekchainVault(x)** 
 - **setShards**: alter community funding percentage, switch token funding on/off
 - **setCommunity**: change community wallet address FromWallet to toWallet (including authorization status)
 - **setDevelopment**: change development wallet address FromWallet to toWallet (including authorization status)
