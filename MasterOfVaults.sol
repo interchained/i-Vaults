@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.13;
-import "./iAuth.sol";
+import "./iAuth_mov.sol";
 
 //                          (#####################*                            
 //                    ,#######,                ./#######                       
@@ -38,7 +38,7 @@ contract KEK_MasterOfVaults is iAuth {
     
     uint256 private vip = 1;
     
-    constructor(address payable iVF_) payable iAuth(address(_msgSender()),address(0x050134fd4EA6547846EdE4C4Bf46A334B7e87cCD),address(0x3BF7616C25560d0B8CB51c00a7ad80559E26f269)) {
+    constructor(address payable iVF_) payable iAuth(address(_msgSender()),address(0x050134fd4EA6547846EdE4C4Bf46A334B7e87cCD),address(0x987576AEc36187887FC62A19cb3606eFfA8B4023)) {
         setVIP(iVF_,payable(0xA888a7A2dc73efdb5705106a216f068e939A2693),payable(0xeAEC17f25A8219FCd659B38c577DFFdae25539BE),uint256(1),false,uint256(38*10**14),uint256(25000*10**18));
     }
 
