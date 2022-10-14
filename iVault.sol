@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.13;
-import "./iAuth.sol";
+import "./Auth.sol";
 
-contract xoB is iAuth, IRECEIVE_TOKEN {
+contract iVault is iAuth, IRECEIVE_TOKEN {
     
     address payable private _development = payable(0x050134fd4EA6547846EdE4C4Bf46A334B7e87cCD);
-    address payable private _community = payable(0x74b9006390BfA657caB68a04501919B72E27f49A);
+    address payable private _community = payable(0x987576AEc36187887FC62A19cb3606eFfA8B4023);
 
     string public name = unicode"🔒";
     string public symbol = unicode"🔑";
