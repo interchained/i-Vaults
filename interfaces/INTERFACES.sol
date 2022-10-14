@@ -6,7 +6,7 @@ abstract contract _MSG {
     }
 }
 
-interface I_VAULT {
+interface I_iVAULT {
     function withdraw() external;
     function withdrawToken(address token) external;
     function withdrawFrom(uint256 number) external;
