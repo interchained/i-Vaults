@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.13;
-import "./Auth.sol";
+import "./auth/iAuth.sol";
 
 contract iVault is iAuth, IRECEIVE_TOKEN {
     
