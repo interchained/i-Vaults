@@ -16,7 +16,6 @@ contract iVault is iAuth, IRECEIVE_TOKEN {
     address public iVF;
     address payable private TOKEN = payable(0x67954768E721FAD0f0f21E33e874497C73ED6a82);
     address payable private WTOKEN = payable(0x67954768E721FAD0f0f21E33e874497C73ED6a82);
-    IWRAP private WageTOKEN = IWRAP(0x67954768E721FAD0f0f21E33e874497C73ED6a82);
     
     mapping(address => Vault) private vaultRecords;
     mapping(address => mapping (uint => uint)) private depositRecords;
