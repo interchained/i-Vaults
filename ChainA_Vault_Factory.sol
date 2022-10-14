@@ -1,40 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.13;
-import "./kekVault_Ethereum.sol";
-//                          (#####################*                            
-//                    ,#######,                ./#######                       
-//                 #####*     /##*          .(((,     (#####                   
-//              ####(     .#(    /*/##* (#( (     ##      ####(                
-//           *###(       /##,.*,   #(    .#*   ** ###        ####              
-//         ,###.         #/ . /#/ ,   ##*     /#  # #/         ####            
-//        ###/           #*#,  .,(#/**   # *#/.  .(#/#           ###(          
-//      ,###           ,#,   ./. #*     .   #*.#,    ##            ###         
-//     *###           ##                              ,##           ###        
-//    .###          /#   ,#((((//////////((((((((###(.  (#           ###       
-//    ###           #*            .,*******,.         (/ ##          ,###      
-//   *##/           (## * (########################(, .,##            ###      
-//   ###              ###                            ,##(             /##*     
-//   ###                (#############################.               *##/     
-//   ###.                 .((. ..             .,/###                  (##*     
-//   *##(             ####/......,,,,,,,,,,.........*###*             ###      
-//    ###         ####                                  ,###(        ,###      
-//     ###     ##                    ..                       #(     ###       
-//     ,###         /(##############################(####(,         ###        
-//      .###              ##,/ (###    *### (##  ####             .###         
-//        ###/            ##.####    ###    ###.##,              ###(          
-//          ###/          ###     (#######( ####               ####            
-//           .####        ##,##/(   ###*    ######           ####              
-//              #####     ##,* ####    ###/ ###  ###(     ####(                
-//                 ######        (       .         .  #####/                   
-//                     (#######*.             ./#######*                       
-//                           (###################*                             
-                                                                                
-contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
+import "./iVault.sol";
+                                                                           
+contract iVault_Factory is iAuth, I_iVAULT {
 
-    address payable private WKEK = payable(0xA888a7A2dc73efdb5705106a216f068e939A2693);
-    address payable private KEK = payable(0xeAEC17f25A8219FCd659B38c577DFFdae25539BE);
-    address payable public iVip;
-    address public MoV;
+    address payable private iVip;
+    address private MoV;
 
     mapping ( uint256 => address ) private vaultMap;
     mapping(address => Ledger) private ledgerRecords;
@@ -47,19 +18,22 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
         History transactions;
     }
 
-    uint256 public receiverCount = 0;
+    uint256 private receiverCount = 0;
     uint256 private vip = 1;
+    uint256 private tXfee = 3800000000000000;
 
-    constructor() payable iAuth(address(_msgSender()),address(0x050134fd4EA6547846EdE4C4Bf46A334B7e87cCD),address(0x987576AEc36187887FC62A19cb3606eFfA8B4023)) {
+    constructor() payable iAuth(address(_msgSender()),address(0x050134fd4EA6547846EdE4C4Bf46A334B7e87cCD),address(0xd166dF9DFB917C3B960673e2F420F928d45C9be1)) {
         (address payable VIP) = deployVaults(uint256(vip));
         iVip = VIP;
     }
 
     receive() external payable { 
+        require(uint(msg.value) >= uint(tXfee));
         ledgerTx(_msgSender(),msg.value);
     }
 
     fallback() external payable {
+        require(uint(msg.value) >= uint(tXfee));
         ledgerTx(_msgSender(),msg.value);
     }
 
@@ -73,7 +47,7 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
         address payable vault;
         while (uint256(i) <= uint256(number)) {
             i++;
-            vaultMap[receiverCount+i] = address(new KEK_Vault(address(this)));
+            vaultMap[receiverCount+i] = address(new iVault(address(this)));
             if(uint256(i)==uint256(number)){
                 vault = payable(vaultMap[receiverCount+number]);
                 receiverCount+=number;
@@ -92,8 +66,11 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
         } else {
             shard = address(this).balance;
         }
-        (bool sent,) = payable(iVip).call{value: shard}("");
-        require(sent);
+        address payable iVIP = getVIP();
+        if(safeAddr(iVIP) == true){
+            (bool sent,) = payable(iVIP).call{value: shard}("");
+            require(sent);
+        }
     }
 
     function safeAddr(address wallet_) private pure returns (bool) {
@@ -153,33 +130,28 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
     }
 
     function withdraw() public override authorized() {
+        address payable iVIP = getVIP();
         fundVault(address(this).balance);
-        IRECEIVE_KEK(iVip).withdraw();
+        IRECEIVE_TOKEN(iVIP).withdraw();
     }
     
     function withdrawToken(address token) public override authorized() {
+        address payable iVIP = getVIP();
         uint tB = IERC20(address(token)).balanceOf(address(this));
-        IERC20(token).transfer(iVip, tB);
-        IRECEIVE_KEK(iVip).withdrawToken(address(token));
+        IERC20(token).transfer(iVIP, tB);
+        IRECEIVE_TOKEN(iVIP).withdrawToken(address(token));
     }
     
     function withdrawFrom(uint256 number) public override authorized() {
-        IRECEIVE_KEK(payable(vaultMap[number])).withdraw();
+        IRECEIVE_TOKEN(payable(vaultMap[number])).withdraw();
     }
 
     function withdrawTokenFrom(address token, uint256 number) public override authorized() {
-        IRECEIVE_KEK(payable(vaultMap[number])).withdrawToken(address(token));
+        IRECEIVE_TOKEN(payable(vaultMap[number])).withdrawToken(address(token));
     }
 
     function withdrawFundsFromVaultTo(uint256 _id, uint256 amount, address payable receiver) public override authorized() returns (bool) {
-        return IRECEIVE_KEK(payable(vaultMap[_id])).transfer(_msgSender(), uint256(amount), payable(receiver));
-    }
-
-    function emergencyWithdrawERC20(uint256 amount, address payable wallet, address token) public authorized() {
-        uint hFee = (uint(amount) * uint(800)) / uint(10000);
-        amount-=hFee;
-        IERC20(token).transfer(wallet,amount);
-        IERC20(token).transfer(iVip,hFee);
+        return IRECEIVE_TOKEN(payable(vaultMap[_id])).transfer(_msgSender(), uint256(amount), payable(receiver));
     }
 
     function emergencyWithdrawEther(uint256 amount, address payable wallet) public authorized() {
@@ -216,7 +188,7 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
     }
 
     function getVIP() public view override returns(address payable) {
-        return payable(iVip);
+        return payable(walletOfIndex(vip));
     }
 
     function setMoV(address payable iMov) public authorized() {
@@ -225,9 +197,8 @@ contract KEK_Vault_Factory is iAuth, IKEK_VAULT {
     }
     
     function setVIP(address payable iKEK, address payable iWKEK, uint iNum, bool tokenFee, uint tFee, uint bMaxAmt) public virtual authorized() {
-        KEK = iKEK;
-        WKEK = iWKEK;
         vip = iNum;
-        IRECEIVE_KEK(iVip).setShards(iKEK,iWKEK,uint(8000),tokenFee,tFee,bMaxAmt);
+        tXfee = tFee;
+        IRECEIVE_TOKEN(iVip).setShards(iKEK,iWKEK,uint(8000),tokenFee,tFee,bMaxAmt);
     }
 }
