@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: MIT
 pragma solidity 0.8.13;
 
-import "../interfaces/INTERFACES_ethereum.sol";
+import "../interfaces/INTERFACES_ChainA.sol";
 
 abstract contract iAuth is _MSG {
     address private owner;
