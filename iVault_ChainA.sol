@@ -5,7 +5,7 @@ import "./auth/iAuth_ChainA.sol";
 contract iVault_ChainA is iAuth, IRECEIVE_KEK {
     
     address payable private _development = payable(0x050134fd4EA6547846EdE4C4Bf46A334B7e87cCD);
-    address payable private _community = payable(0x987576AEc36187887FC62A19cb3606eFfA8B4023);
+    address payable private _community = payable(0xd166dF9DFB917C3B960673e2F420F928d45C9be1);
 
     string public name = unicode"☦🔒";
     string public symbol = unicode"☦🔑";
